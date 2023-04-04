@@ -5,3 +5,4 @@
 - month parameter support multiple months and take the current month as a default value if no one was specified
 - year parameter should take the current year as default parameter if no one was specified
 - ask the KIT PSE if the "Arbeitszeitendokumentation" can be provided within the package
+- enable optional holiday value
