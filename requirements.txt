@@ -1,3 +1,5 @@
 argcomplete==3.0.5
 prettytable==3.6.0
 wcwidth==0.2.6
+deutschland==0.3.1
+de-feiertage==1.0.1

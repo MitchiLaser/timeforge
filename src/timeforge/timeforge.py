@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-n', '--name', type=str, required=True,
                    help='Name of the working person')
 
-parser.add_argument('-m', '--month', type=str, required=True,
+parser.add_argument('-m', '--month', type=int, required=True,
                     help='The month in which the job was done')
 
 parser.add_argument('-y', '--year', type=int, required=True,
@@ -22,6 +22,9 @@ parser.add_argument('-t', '--time', type=float, required=True,
 
 parser.add_argument('-p', '--personell', type=int, required=True,
                     help='personell number (please do not put it in quotation marks')
+
+parser.add_argument('-s','--salary', type=float, required=True,
+                    help="the salary (per hour) in euros")
 
 parser.add_argument('-o', '--organisation', type=str, required=True,
                     help='Name of the KIT organisational unit')
@@ -49,6 +52,7 @@ if args.verbose:
     tab.add_row(["Year", args.year])
     tab.add_row(["Working Time", args.time])
     tab.add_row(["Personell number", args.personell])
+    tab.add_row(["Salary", str(args.salary) + '€'])
     tab.add_row(["Organisation unit", args.organisation])
     tab.add_row(["GF", args.low_income])
     tab.add_row(["UB", args.u])
@@ -62,6 +66,9 @@ if True:
     import sys, os
     from deutschland import feiertage
     from deutschland.feiertage.api import default_api
+    from datetime import date, timedelta, datetime, time
+
+#########################################
 
 with feiertage.ApiClient() as api_client:
     api_instance = default_api.DefaultApi(api_client)
@@ -74,9 +81,30 @@ with feiertage.ApiClient() as api_client:
         print("Exception when calling Feiertage API -> get_feiertage: %s\n"%e)
         sys.exit(os.EX_UNAVAILABLE)
 
+#########################################
+
 if args.verbose:
     from pprint import pprint
     print("\nResponse form the Feiertage API:")
     pprint(api_response)
+
+#########################################
+
+form_data = {
+    'Std' : args.time,
+    'Summe' : args.time,
+    'monatliche SollArbeitszeit' : args.time,
+    'Urlaub anteilig' : 0,
+    'Übertrag vom Vormonat' : 0, 
+    'Übertrag in den Folgemonat' : 0, 
+    'Stundensatz' : "%.2f"%(args.salary)+'€', 
+    'Personalnummer' : args.personell, 
+    'OE' : args.organisation,
+    'GF' : args.name, #Name, Vorname
+    'abc' : args.month, #Monat
+    'abdd' : args.year, #Jahr
+    'undefined' : '', #Datum, Unterschrift Dienstvorgesetzte/r
+    'Ich bestätige die Richtigkeit der Angaben' : (date(year=args.year,month=args.month,day=1) + timedelta(days=31)).replace(day=1)
+}
 
 

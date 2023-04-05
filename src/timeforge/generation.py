@@ -17,7 +17,7 @@ holidays = 0
 pay = 12
 personal_nr = "007"
 name = "Faula"
-oe = ""out_PDF
+oe = ""
 form_data = {
 'Std': hours,
 'Urlaub anteilig': holidays,

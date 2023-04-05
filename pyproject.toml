@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "TimeForge"
 version = "0.1.0"
 authors = [
-  { name="Michael Hohenstein", email="michael@hohenste.in" },
+	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
 description = "Create realistic looking but fake time documentation for your student job at KIT"
 readme = "README.md"
@@ -19,6 +19,13 @@ classifiers = [
 	"Topic :: Office/Business :: Scheduling",
 	"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 	"License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+]
+dependencies = [
+	"argcomplete >= 3.0.5",
+	"prettytable> = 3.6.0",
+	"wcwidth >= 0.2.6",
+	"deutschland >= 0.3.1",
+	"de-feiertage >= 1.0.1",
 ]
 
 [projects.urls]
