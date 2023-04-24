@@ -6,3 +6,4 @@
 - year parameter should take the current year as default parameter if no one was specified
 - ask the KIT PSE if the "Arbeitszeitendokumentation" can be provided within the package
 - enable optional holiday value
+- check or uncheck checkboxes in pdf
