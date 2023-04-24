@@ -2,6 +2,7 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import argparse, argcomplete
+from datetime import date, timedelta, datetime, time
 
 parser = argparse.ArgumentParser(
     prog='TimeForge',
@@ -11,11 +12,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-n', '--name', type=str, required=True,
                    help='Name of the working person')
 
-parser.add_argument('-m', '--month', type=int, required=True,
-                    help='The month in which the job was done')
+parser.add_argument('-m', '--month', type=int, default= datetime.now().month,
+                    help='The month in which the job was done, default value will be taken from the system clock')
 
-parser.add_argument('-y', '--year', type=int, required=True,
-                    help='the year in which the work was done')
+parser.add_argument('-y', '--year', type=int, default= datetime.now().year,
+                    help='the year in which the work was done, default value will be taken from the system clock')
 
 parser.add_argument('-t', '--time', type=float, required=True,
                     help='the amount of working time in a month') 
@@ -74,7 +75,6 @@ if True:
     import sys, os
     from deutschland import feiertage
     from deutschland.feiertage.api import default_api
-    from datetime import date, timedelta, datetime, time
     from pypdf import PdfReader, PdfWriter
 
 #########################################
