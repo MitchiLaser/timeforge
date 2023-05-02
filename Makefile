@@ -1,4 +1,4 @@
-all:
+build:
 	python -m build
 
 
@@ -8,7 +8,7 @@ clean:
 	rm -rf TimeForge.egg-info/
 
 
-upload: all
+upload: build
 	twine upload dist/*
 
 venv:
