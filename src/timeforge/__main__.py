@@ -40,10 +40,13 @@ parser.add_argument('-v', '--verbose', action='store_true',
                     help='more detailed information printing for debugging purpose')
 
 parser.add_argument('-i', '--input', type=str, required=True,
-                    help='the location of the input file')
+                    help='the location of the input file (The MiLoG-Arbeitszeitdokumentation.pdf from the PSE website)')
 
 parser.add_argument('-o', '--output', type=str, required=True,
                     help='Output File where the content will be written to')
+
+parser.add_argument('-j', '--job', type=str, required=True,
+                    help='description of the job task')
 
 argcomplete.autocomplete(parser)
 args = parser.parse_args()
@@ -66,6 +69,7 @@ if args.verbose:
     tab.add_row(["Verbose", args.verbose])
     tab.add_row(["Input File", args.input])
     tab.add_row(["Output-File", args.output])
+    tab.add_row(["Job-task", args.job])
     print(tab)
 
 #########################################
@@ -125,7 +129,7 @@ work_hours_left = args.time
 while (work_hours_left > 0) and (date_day < 28): # February has 28 days and is therefore the shortest month of all
     if ( ( d := date( year=args.year, month=args.month, day=date_day) ).weekday() <= 5 ) and ( not d in feiertage_api_response ):
         worktime = timedelta( hours = ( h := min(work_hours_left, 4) ) ) # 4h maximum to work
-        form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = "Arbeitstätigkeit"
+        form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = args.job
         form_data["ttmmjjRow"+str(table_row)] = d.strftime("%d.%m.%y")
         form_data["hhmmRow"+str(table_row)] = ( start := time(hour=8) ).strftime("%H:%M" )  # beginning at 8am
         form_data["hhmmRow"+str(table_row)+"_2"] =( end := ( datetime.combine(d,start) + worktime ) ).time().strftime("%H:%M")
