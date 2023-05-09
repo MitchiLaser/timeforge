@@ -31,10 +31,10 @@ parser.add_argument('-O', '--organisation', type=str, required=True,
                     help='Name of the KIT organisational unit')
 
 parser.add_argument('-g', '--low-income', action='store_true',
-                    help='the \'geringfügig beschäftigt\' (GF) field in the form, default: False')
+                    help='the Großforschungsbereich (GF) field in the form, default: False')
 
 parser.add_argument('-u', action='store_true',
-                    help='the UB field in the form, default: False') # figure out what EB stands for
+                    help='the Universitätsbereich (UB) field in the form, default: True')
 
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='more detailed information printing for debugging purpose')
