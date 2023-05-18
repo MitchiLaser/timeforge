@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "TimeForge"
-version = "0.1.6"
+version = "0.1.8"
 authors = [
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
@@ -29,6 +29,7 @@ dependencies = [
 	"pypdf >= 3.8.0",
 ]
 
-[projects.urls]
+[project.urls]
 "Homepage" = "https://github.com/MitchiLaser/timeforge"
+"Repository" = "https://github.com/MitchiLaser/timeforge"
 
