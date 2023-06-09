@@ -1,10 +1,14 @@
 import requests
 import json
 from datetime import date
+import sys, os
 
 def get_feiertage():
-
-    r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+    try:
+        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+    except Exception as e:
+        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
+        sys.exit(os.EX_UNAVAILABLE)
     feiertage:dict = json.loads(r.content)
     
     feiertage_datum_str = list(feiertage.values())
