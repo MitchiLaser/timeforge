@@ -152,7 +152,7 @@ with tempfile.TemporaryFile() as temp:
     temp.write(r.content)
     temp.seek(0)    # move cursor back to the beginning of the file
 
-    pdf_reader = PdfReader( temp ) #open(temp, 'rb') )
+    pdf_reader = PdfReader( temp ) 
     pdf_writer = PdfWriter()
 
     fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
