@@ -39,9 +39,6 @@ parser.add_argument('-u', action='store_true',
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='more detailed information printing for debugging purpose')
 
-parser.add_argument('-i', '--input', type=str, required=True,
-                    help='the location of the input file (The MiLoG-Arbeitszeitdokumentation.pdf from the PSE website)')
-
 parser.add_argument('-o', '--output', type=str, required=True,
                     help='Output File where the content will be written to')
 
@@ -67,7 +64,6 @@ if args.verbose:
     tab.add_row(["GF", args.low_income])
     tab.add_row(["UB", args.u])
     tab.add_row(["Verbose", args.verbose])
-    tab.add_row(["Input File", args.input])
     tab.add_row(["Output-File", args.output])
     tab.add_row(["Job-task", args.job])
     print(tab)
@@ -80,6 +76,8 @@ if True:
     from deutschland import feiertage
     from deutschland.feiertage.api import default_api
     from pypdf import PdfReader, PdfWriter
+    import tempfile
+    import requests
 
 #########################################
 
@@ -147,18 +145,24 @@ if args.verbose:
 
 #########################################
 
-pdf_reader = PdfReader( open(args.input, 'rb') )
-pdf_writer = PdfWriter()
+with tempfile.TemporaryFile() as temp:
 
-fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
-for field in fields:                    # fill out all the fields in the form
-    if field in form_data:
-        pdf_writer.update_page_form_field_values(pdf_reader.pages[0],{field: form_data[field]}) 
+    # download online form and store it in a tempfile
+    r = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
+    temp.write(r.content)
+    temp.seek(0)    # move cursor back to the beginning of the file
 
-pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
+    pdf_reader = PdfReader( temp ) #open(temp, 'rb') )
+    pdf_writer = PdfWriter()
+
+    fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
+    for field in fields:                    # fill out all the fields in the form
+        if field in form_data:
+            pdf_writer.update_page_form_field_values(pdf_reader.pages[0],{field: form_data[field]}) 
+
+    pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
 
 #########################################
 
 with open(args.output, 'wb') as output_file:    # write file
     pdf_writer.write(output_file)
-output_file.close()
