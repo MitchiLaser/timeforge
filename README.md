@@ -22,4 +22,4 @@ This program has currently only a command line interface. Use
 $ python -m timeforge --help
 ```
 
-to get an overview of the functionality.
+to get an overview of the functionality. The PDF document with the form will be automatically downloaded from the PSE homepage.
