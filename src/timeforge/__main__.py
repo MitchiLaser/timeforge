@@ -13,7 +13,7 @@ parser.add_argument('-n', '--name', type=str, required=True,
                    help='Name of the working person')
 
 parser.add_argument('-m', '--month', type=int, default= datetime.now().month,
-                    help='The month in which the job was done, default value will be taken from the system clock')
+                    help='The month in which the job was done as number, default value will be taken from the system clock')
 
 parser.add_argument('-y', '--year', type=int, default= datetime.now().year,
                     help='the year in which the work was done, default value will be taken from the system clock')
