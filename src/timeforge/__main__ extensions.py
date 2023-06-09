@@ -127,7 +127,8 @@ import _extensions as ex
 
 table_row = 1
 month = ex.Month(args.year, args.month, args.time, args.job)
-for day in month.days:
+days = month.days
+for day in sorted(days):
     form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
     form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
     form_data["hhmmRow"+str(table_row)] = ( start := time(hour= day.begin) ).strftime("%H:%M" )  # beginning at 8am

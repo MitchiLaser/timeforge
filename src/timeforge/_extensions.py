@@ -10,6 +10,9 @@ class Day:
         self.worktime = int(worktime)
         self.pause = int(pause)
 
+    def __lt__(self, other):
+        return self.date < other.date
+
 class Month:
     def __init__(self, year, month, work_hours, job):
         # Werte für Zufallslängen in h
@@ -23,11 +26,12 @@ class Month:
         self._month = month
         self.work_hours = work_hours
         self.days = []
-        timeblocks = self.make_timeblocks(work_hours)
+        timeblocks = self.make_timeblocks(self.work_hours)
         self.make_days(year, self._month, timeblocks, job)
     
     def add_work(self, job, date, begin, end, pause, worktime):
         self.days.append(Day(job, date, begin, end, pause, worktime))
+        #self.days.sort()
 
     def make_timeblocks(self, work_hours_left):
         def random_timeblock(min, max):
