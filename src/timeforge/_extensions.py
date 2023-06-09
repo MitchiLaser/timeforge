@@ -2,19 +2,19 @@ from datetime import date
 from numpy.random import randint, rand
 
 class Day:
-    def __init__(self, job, date, begin, end, pause, worktime):
+    def __init__(self, job, date, start_time, end_time, pause, work_hours):
         self.job = job
         self.date = date
-        self.begin = int(begin)
-        self.end = int(end)
-        self.worktime = int(worktime)
+        self.start_time = int(start_time)
+        self.end_time = int(end_time)
+        self.work_hours = int(work_hours)
         self.pause = int(pause)
 
     def __lt__(self, other):
         return self.date < other.date
 
 class Month:
-    def __init__(self, year, month, work_hours, job):
+    def __init__(self, year, month, total_work_hours, job):
         # Werte für Zufallslängen in h
         self.min_timeblock = 2
         self.max_timeblock = 4
@@ -24,16 +24,16 @@ class Month:
         self.max_start_time = 23 - 2 * self.max_timeblock - self.max_pause
 
         self._month = month
-        self.work_hours = work_hours
+        self.total_work_hours = total_work_hours
         self.days = []
-        timeblocks = self.make_timeblocks(self.work_hours)
+        timeblocks = self.make_timeblocks(self.total_work_hours)
         self.make_days(year, self._month, timeblocks, job)
     
-    def add_work(self, job, date, begin, end, pause, worktime):
-        self.days.append(Day(job, date, begin, end, pause, worktime))
-        #self.days.sort()
+    def add_work(self, job, date, start_time, end_time, pause, work_hours):
+        self.days.append(Day(job, date, start_time, end_time, pause, work_hours))
 
     def make_timeblocks(self, work_hours_left):
+        '''Erstellt Array von int Zeitblöcken, sodass sie in Summe die Monatsarbeitszeit ergeben '''
         def random_timeblock(min, max):
             return randint(min, max+1)
         
@@ -48,6 +48,7 @@ class Month:
         return timeblock_array
 
     def make_days(self, year, month, timeblocks, job):
+        '''Erstellt Einträge für den gesamten Monat'''
         def make_workday_date(year, month):
             import sys, os
             from deutschland import feiertage
@@ -77,8 +78,8 @@ class Month:
         
         timeblocks_left = len(timeblocks)
         
-        # Pause wird Zufällig eingefügt. Ab 10h müssen 2 Blöcke pro Tag gemacht werden um genug Arbeitszeit unterzubringen
-        if self.work_hours < 20:
+        # Pause wird Zufällig eingefügt. Ab 20h müssen 2 Blöcke pro Tag gemacht werden um genug Arbeitszeit unterzubringen
+        if self.total_work_hours < 20:
             p_2blocks = 0.3
         else:
             p_2blocks = 1
@@ -92,6 +93,8 @@ class Month:
                 work_time = timeblocks.pop()
                 start_time = random_start_time(self.min_start_time, self.max_start_time)
                 pause = 0
+                
+                # fügt zufällig eine Pause und einen 2. Arbeitsblock ein
                 if p_2blocks >= rand() and timeblocks_left > 0:
                     timeblocks_left -= 1
                     pause = random_pause(self.min_pause, self.max_pause)

@@ -131,10 +131,10 @@ days = month.days
 for day in sorted(days):
     form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
     form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
-    form_data["hhmmRow"+str(table_row)] = ( start := time(hour= day.begin) ).strftime("%H:%M" )  # beginning at 8am
-    form_data["hhmmRow"+str(table_row)+"_2"] = ( end := time(hour= day.end) ).strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)] = ( start := time(hour= day.start_time) ).strftime("%H:%M" )  # beginning at 8am
+    form_data["hhmmRow"+str(table_row)+"_2"] = ( end := time(hour= day.end_time) ).strftime("%H:%M")
     form_data["hhmmRow"+str(table_row)+"_3"] = ( pause := time(hour= day.pause) ).strftime("%H:%M")
-    form_data["hhmmRow"+str(table_row)+"_4"] = ( work_time := time(hour= day.worktime) ).strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_4"] = ( work_time := time(hour= day.work_hours) ).strftime("%H:%M")
     table_row += 1
 
 #########################################
