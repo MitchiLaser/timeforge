@@ -79,6 +79,17 @@ if args.month > 12 or args.month < 1:
     print("Monat muss zwischen 1 und 12 liegen")
     sys.exit()
 
+if args.year < 0:
+    print("Jahr muss größer 0 sein")
+    sys.exit()
+
+if args.time < 0:
+    print("Arbeitszeit muss größer 0 sein")
+    sys.exit()
+
+if args.salary < 0:
+    print("Gehalt muss größer 0 sein")
+    sys.exit()
 #########################################
 
 # prevent autopep8 from moving these imports to the front
