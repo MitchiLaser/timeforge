@@ -76,32 +76,7 @@ if args.verbose:
 
 # prevent autopep8 from moving these imports to the front
 if True:
-    import sys, os
-    from deutschland import feiertage
-    from deutschland.feiertage.api import default_api
     from pypdf import PdfReader, PdfWriter
-
-#########################################
-
-with feiertage.ApiClient() as api_client:
-    api_instance = default_api.DefaultApi(api_client)
-    nur_land = "BW" # only check for the federal state of Baden-Württemberg
-    nur_daten = 1   # dismiss additional information about the day
-
-    try:
-        feiertage_api_response = api_instance.get_feiertage(str(args.year), nur_land=nur_land, nur_daten=nur_daten)
-    except feiertage.ApiException as e:
-        print("Exception when calling Feiertage API -> get_feiertage: %s\n"%e)
-        sys.exit(os.EX_UNAVAILABLE)
-
-#########################################
-
-if args.verbose:
-    from pprint import pprint
-    print("\nResponse form the Feiertage API:")
-    pprint(feiertage_api_response)
-
-#########################################
 
 form_data = {
     'Std' : args.time,
@@ -140,6 +115,7 @@ for day in sorted(days):
 #########################################
 
 if args.verbose:
+    from pprint import pprint
     print("\nForm Data:")
     pprint(form_data)
 
