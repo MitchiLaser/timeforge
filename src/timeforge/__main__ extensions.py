@@ -71,6 +71,13 @@ if args.verbose:
     tab.add_row(["Output-File", args.output])
     tab.add_row(["Job-task", args.job])
     print(tab)
+#########################################
+
+#check args
+import sys
+if args.month > 12 or args.month < 1:
+    print("Monat muss zwischen 1 und 12 liegen")
+    sys.exit()
 
 #########################################
 
@@ -106,10 +113,10 @@ days = month.days
 for day in sorted(days):
     form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
     form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
-    form_data["hhmmRow"+str(table_row)] = ( start := time(hour= day.start_time) ).strftime("%H:%M" )  # beginning at 8am
-    form_data["hhmmRow"+str(table_row)+"_2"] = ( end := time(hour= day.end_time) ).strftime("%H:%M")
-    form_data["hhmmRow"+str(table_row)+"_3"] = ( pause := time(hour= day.pause) ).strftime("%H:%M")
-    form_data["hhmmRow"+str(table_row)+"_4"] = ( work_time := time(hour= day.work_hours) ).strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)] = day.start_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_2"] = day.end_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_3"] = day.pause.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
     table_row += 1
 
 #########################################

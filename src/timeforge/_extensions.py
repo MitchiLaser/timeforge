@@ -1,17 +1,20 @@
-from datetime import date
+from datetime import date, time
 from numpy.random import randint, rand
 
 class Day:
     def __init__(self, job, date, start_time, end_time, pause, work_hours):
         self.job = job
         self.date = date
-        self.start_time = int(start_time)
-        self.end_time = int(end_time)
-        self.work_hours = int(work_hours)
-        self.pause = int(pause)
+        self.start_time = self.time_from_h(start_time)
+        self.end_time = self.time_from_h(end_time)
+        self.work_hours = self.time_from_h(work_hours)
+        self.pause = self.time_from_h(pause)
 
     def __lt__(self, other):
         return self.date < other.date
+    
+    def time_from_h(self, hours):
+        return time(hour= int(hours), minute= int(hours * 60 % 60))
 
 class Month:
     def __init__(self, year, month, total_work_hours, job):
