@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "TimeForge"
-version = "0.1.9"
+version = "0.1.10"
 authors = [
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
@@ -25,7 +25,6 @@ dependencies = [
 	"prettytable >= 3.6.0",
 	"wcwidth >= 0.2.6",
 	"requests >= 2.31.0",
-	"de-feiertage >= 1.0.1",
 	"pypdf >= 3.8.0",
 ]
 

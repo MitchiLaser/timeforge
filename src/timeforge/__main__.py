@@ -76,19 +76,20 @@ if True:
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
+    # import _feiertage
+    from . import _feiertage
 
 #########################################
 
-import _feiertage
-feiertage_api_response = _feiertage.get_feiertage()
-
+# a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
+feiertage_list = _feiertage.get_feiertage()
 
 #########################################
 
 if args.verbose:
     from pprint import pprint
     print("\nResponse form the Feiertage API:")
-    pprint(feiertage_api_response)
+    pprint(feiertage_list)
 
 #########################################
 
@@ -116,7 +117,7 @@ date_day = 1
 table_row = 1
 work_hours_left = args.time
 while (work_hours_left > 0) and (date_day < 28): # February has 28 days and is therefore the shortest month of all
-    if ( ( d := date( year=args.year, month=args.month, day=date_day) ).weekday() <= 5 ) and ( not d in feiertage_api_response ):
+    if ( ( d := date( year=args.year, month=args.month, day=date_day) ).weekday() <= 5 ) and ( not d in feiertage_list ):
         worktime = timedelta( hours = ( h := min(work_hours_left, 4) ) ) # 4h maximum to work
         form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = args.job
         form_data["ttmmjjRow"+str(table_row)] = d.strftime("%d.%m.%y")
