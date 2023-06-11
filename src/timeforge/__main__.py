@@ -76,12 +76,29 @@ if True:
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
-    from . import _feiertage
+    import json
+
+#########################################
+
+# define a function to perform an API cal to the German Feiertage API
+def get_feiertage():
+    try:
+        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+    except Exception as e:
+        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
+        sys.exit(os.EX_UNAVAILABLE)
+    feiertage:dict = json.loads(r.content)
+    
+    feiertage_datum_str = list(feiertage.values())
+    feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
+    feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
+
+    return feiertage_datum
 
 #########################################
 
 # a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
-feiertage_list = _feiertage.get_feiertage()
+feiertage_list = get_feiertage()
 
 #########################################
 
