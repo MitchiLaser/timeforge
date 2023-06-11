@@ -76,7 +76,6 @@ if True:
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
-    # import _feiertage
     from . import _feiertage
 
 #########################################
