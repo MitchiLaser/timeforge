@@ -39,6 +39,9 @@ parser.add_argument('-u', action='store_true',
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='more detailed information printing for debugging purpose')
 
+parser.add_argument('-i', '--input', type=str, required=True,
+                    help='the location of the input file (The MiLoG-Arbeitszeitdokumentation.pdf from the PSE website)')
+
 parser.add_argument('-o', '--output', type=str, required=True,
                     help='Output File where the content will be written to')
 
@@ -64,33 +67,34 @@ if args.verbose:
     tab.add_row(["GF", args.low_income])
     tab.add_row(["UB", args.u])
     tab.add_row(["Verbose", args.verbose])
+    tab.add_row(["Input File", args.input])
     tab.add_row(["Output-File", args.output])
     tab.add_row(["Job-task", args.job])
     print(tab)
+#########################################
 
+#check args
+import sys
+if args.month > 12 or args.month < 1:
+    print("Monat muss zwischen 1 und 12 liegen")
+    sys.exit()
+
+if args.year < 0:
+    print("Jahr muss größer 0 sein")
+    sys.exit()
+
+if args.time < 0:
+    print("Arbeitszeit muss größer 0 sein")
+    sys.exit()
+
+if args.salary < 0:
+    print("Gehalt muss größer 0 sein")
+    sys.exit()
 #########################################
 
 # prevent autopep8 from moving these imports to the front
 if True:
-    import sys, os
     from pypdf import PdfReader, PdfWriter
-    import tempfile
-    import requests
-    from . import _feiertage
-
-#########################################
-
-# a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
-feiertage_list = _feiertage.get_feiertage()
-
-#########################################
-
-if args.verbose:
-    from pprint import pprint
-    print("\nResponse form the Feiertage API:")
-    pprint(feiertage_list)
-
-#########################################
 
 form_data = {
     'Std' : args.time,
@@ -112,48 +116,41 @@ form_data = {
 #########################################
 
 # Generate the content for the PDF file
-date_day = 1
+import _extensions as ex
+
 table_row = 1
-work_hours_left = args.time
-while (work_hours_left > 0) and (date_day < 28): # February has 28 days and is therefore the shortest month of all
-    if ( ( d := date( year=args.year, month=args.month, day=date_day) ).weekday() <= 5 ) and ( not d in feiertage_list ):
-        worktime = timedelta( hours = ( h := min(work_hours_left, 4) ) ) # 4h maximum to work
-        form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = args.job
-        form_data["ttmmjjRow"+str(table_row)] = d.strftime("%d.%m.%y")
-        form_data["hhmmRow"+str(table_row)] = ( start := time(hour=8) ).strftime("%H:%M" )  # beginning at 8am
-        form_data["hhmmRow"+str(table_row)+"_2"] =( end := ( datetime.combine(d,start) + worktime ) ).time().strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_3"] ="00:00" #( (datetime.combine(d,start) + (worktime/2)) ).time().strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_4"] = time( hour=int(h), minute=int( (h % 1) * 60) ).strftime("%H:%M") #"0" + str(worktime) + ":00"
-        work_hours_left -= h
-        table_row += 1
-    date_day += 1
+month = ex.Month(args.year, args.month, args.time, args.job)
+days = month.days
+for day in sorted(days):
+    form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
+    form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
+    form_data["hhmmRow"+str(table_row)] = day.start_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_2"] = day.end_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_3"] = day.pause.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
+    table_row += 1
 
 #########################################
 
 if args.verbose:
+    from pprint import pprint
     print("\nForm Data:")
     pprint(form_data)
 
 #########################################
 
-with tempfile.TemporaryFile() as temp:
+pdf_reader = PdfReader( open(args.input, 'rb') )
+pdf_writer = PdfWriter()
 
-    # download online form and store it in a tempfile
-    r = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
-    temp.write(r.content)
-    temp.seek(0)    # move cursor back to the beginning of the file
+fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
+for field in fields:                    # fill out all the fields in the form
+    if field in form_data:
+        pdf_writer.update_page_form_field_values(pdf_reader.pages[0],{field: form_data[field]}) 
 
-    pdf_reader = PdfReader( temp ) 
-    pdf_writer = PdfWriter()
-
-    fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
-    for field in fields:                    # fill out all the fields in the form
-        if field in form_data:
-            pdf_writer.update_page_form_field_values(pdf_reader.pages[0],{field: form_data[field]}) 
-
-    pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
+pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
 
 #########################################
 
 with open(args.output, 'wb') as output_file:    # write file
     pdf_writer.write(output_file)
+output_file.close()
