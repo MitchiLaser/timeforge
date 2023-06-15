@@ -72,7 +72,8 @@ if args.verbose:
 
 # prevent autopep8 from moving these imports to the front
 if True:
-    import sys, os
+    import sys
+    import os
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
