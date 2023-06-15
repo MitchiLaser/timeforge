@@ -3,23 +3,28 @@
 
 import random
 import requests
-import json
-from datetime import date, timedelta, datetime, time
+import os
+import sys
+import typing
+from datetime import date, datetime, time
 
 #########################################
 
-# define a function to perform an API cal to the German Feiertage API
-def get_feiertage():
+
+def get_feiertage() -> typing.List[date]:
+    """
+    Define a function to perform an API cal to the German Feiertage API
+    :return: List of dates from the datetime package representing each a public holiday
+    """
     try:
-        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+        r: requests.Response = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
     except Exception as e:
         print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
         sys.exit(os.EX_UNAVAILABLE)
-    feiertage:dict = json.loads(r.content)
-    
-    feiertage_datum_str = list(feiertage.values())
-    feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
-    feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
+    # Get json object from the response
+    feiertage: dict = r.json()
+
+    feiertage_datum = [datetime.strptime(i, '%Y-%m-%d').date() for i in list(feiertage.values())]
 
     return feiertage_datum
 
