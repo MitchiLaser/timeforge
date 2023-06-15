@@ -156,7 +156,12 @@ if args.verbose:
 with tempfile.TemporaryFile() as temp:
 
     # download online form and store it in a tempfile
-    r = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
+    try:
+        r:str = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
+    except Exception as e:
+        print(f"Exception when downloading PSE-Hiwi Formular -> {e}\n")
+        sys.exit(os.EX_UNAVAILABLE)
+
     temp.write(r.content)
     temp.seek(0)    # move cursor back to the beginning of the file
 
