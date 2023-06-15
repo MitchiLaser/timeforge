@@ -76,15 +76,7 @@ if True:
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
-    import json
-    import _extensions as ex # TODO: Remove this by refactoring all the code
-
-#########################################
-
-if args.verbose:
-    from pprint import pprint
-    print("\nResponse form the Feiertage API:")
-    pprint(feiertage_list)
+    from . import helpers
 
 #########################################
 
@@ -107,66 +99,21 @@ form_data = {
 
 #########################################
 
-# define a function to perform an API cal to the German Feiertage API
-def get_feiertage():
-    try:
-        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
-    except Exception as e:
-        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
-        sys.exit(os.EX_UNAVAILABLE)
-    feiertage:dict = json.loads(r.content)
-    
-    feiertage_datum_str = list(feiertage.values())
-    feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
-    feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
-
-    return feiertage_datum
-
 # a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
-feiertage_list = get_feiertage()
+feiertage_list = helpers.get_feiertage()
 
 #########################################
 
-# a class to store every row in the table (=every single working day) in an internal data structure
-class Day:
-    def __init__(self, job, date, start_time, end_time, pause, work_hours):
-        self.job            = job                           # Job description
-        self.date           = date                          # the date of the day
-        self.start_time     = self.time_from_h(start_time)  # working start time
-        self.end_time       = self.time_from_h(end_time)    # working end time
-        self.work_hours     = self.time_from_h(work_hours)  # total working hours per day
-        self.pause          = self.time_from_h(pause)       # total pause hours per day
-
-    def __lt__(self, other):
-        return self.date < other.date
-    
-    def time_from_h(self, hours):
-        return time(hour= int(hours), minute= int(hours * 60 % 60))
+if args.verbose:
+    from pprint import pprint
+    print("\nResponse form the Feiertage API:")
+    pprint(feiertage_list)
 
 #########################################
 
 # Generate the content for the PDF file
-# TODO: Refactor
-"""
-date_day = 1
 table_row = 1
-work_hours_left = args.time
-while (work_hours_left > 0) and (date_day < 28): # February has 28 days and is therefore the shortest month of all
-    if ( ( d := date( year=args.year, month=args.month, day=date_day) ).weekday() <= 5 ) and ( not d in feiertage_list ):
-        worktime = timedelta( hours = ( h := min(work_hours_left, 4) ) ) # 4h maximum to work
-        form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = args.job
-        form_data["ttmmjjRow"+str(table_row)] = d.strftime("%d.%m.%y")
-        form_data["hhmmRow"+str(table_row)] = ( start := time(hour=8) ).strftime("%H:%M" )  # beginning at 8am
-        form_data["hhmmRow"+str(table_row)+"_2"] =( end := ( datetime.combine(d,start) + worktime ) ).time().strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_3"] ="00:00" #( (datetime.combine(d,start) + (worktime/2)) ).time().strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_4"] = time( hour=int(h), minute=int( (h % 1) * 60) ).strftime("%H:%M") #"0" + str(worktime) + ":00"
-        work_hours_left -= h
-        table_row += 1
-    date_day += 1
-"""
-
-table_row = 1
-month = ex.Month(args.year, args.month, args.time, args.job)
+month = helpers.Month_Dataset(args.year, args.month, args.time, args.job, feiertage_list)
 days = month.days
 for day in sorted(days):
     form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
