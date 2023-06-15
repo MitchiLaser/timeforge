@@ -54,19 +54,24 @@ class Month:
         '''Erstellt Einträge für den gesamten Monat'''
         def make_workday_date(year, month):
             import sys, os
-            from deutschland import feiertage
-            from deutschland.feiertage.api import default_api
-            with feiertage.ApiClient() as api_client:
-                api_instance = default_api.DefaultApi(api_client)
-                nur_land = "BW" # only check for the federal state of Baden-Württemberg
-                nur_daten = 1   # dismiss additional information about the day
+            import requests, json
 
+            def get_feiertage():
                 try:
-                    feiertage_api_response = api_instance.get_feiertage(str(2000), nur_land=nur_land, nur_daten=nur_daten)
-                except feiertage.ApiException as e:
-                    print("Exception when calling Feiertage API -> get_feiertage: %s\n"%e)
+                    r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+                except Exception as e:
+                    print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
                     sys.exit(os.EX_UNAVAILABLE)
-            
+                feiertage:dict = json.loads(r.content)
+                
+                feiertage_datum_str = list(feiertage.values())
+                feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
+                feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
+
+                return feiertage_datum
+
+            feiertage_api_response = get_feiertage()
+
             while True:
                 day = randint(1,29)
                 d = date(year, month, day)

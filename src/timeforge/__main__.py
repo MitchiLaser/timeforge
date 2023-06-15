@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-n', '--name', type=str, required=True,
                    help='Name of the working person')
 
-parser.add_argument('-m', '--month', type=int, default= datetime.now().month,
+parser.add_argument('-m', '--month', type=int, default= datetime.now().month, metavar="[1-12]", choices=range(1,13),
                     help='The month in which the job was done as number, default value will be taken from the system clock')
 
 parser.add_argument('-y', '--year', type=int, default= datetime.now().year,
@@ -77,28 +77,7 @@ if True:
     import tempfile
     import requests
     import json
-
-#########################################
-
-# define a function to perform an API cal to the German Feiertage API
-def get_feiertage():
-    try:
-        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
-    except Exception as e:
-        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
-        sys.exit(os.EX_UNAVAILABLE)
-    feiertage:dict = json.loads(r.content)
-    
-    feiertage_datum_str = list(feiertage.values())
-    feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
-    feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
-
-    return feiertage_datum
-
-#########################################
-
-# a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
-feiertage_list = get_feiertage()
+    import _extensions as ex # TODO: Remove this by refactoring all the code
 
 #########################################
 
@@ -128,7 +107,47 @@ form_data = {
 
 #########################################
 
+# define a function to perform an API cal to the German Feiertage API
+def get_feiertage():
+    try:
+        r:str = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
+    except Exception as e:
+        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
+        sys.exit(os.EX_UNAVAILABLE)
+    feiertage:dict = json.loads(r.content)
+    
+    feiertage_datum_str = list(feiertage.values())
+    feiertage_datum_str_split = [val.split('-') for val in feiertage_datum_str]
+    feiertage_datum = [date(int(y),int(m),int(d)) for y,m,d in feiertage_datum_str_split]
+
+    return feiertage_datum
+
+# a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
+feiertage_list = get_feiertage()
+
+#########################################
+
+# a class to store every row in the table (=every single working day) in an internal data structure
+class Day:
+    def __init__(self, job, date, start_time, end_time, pause, work_hours):
+        self.job            = job                           # Job description
+        self.date           = date                          # the date of the day
+        self.start_time     = self.time_from_h(start_time)  # working start time
+        self.end_time       = self.time_from_h(end_time)    # working end time
+        self.work_hours     = self.time_from_h(work_hours)  # total working hours per day
+        self.pause          = self.time_from_h(pause)       # total pause hours per day
+
+    def __lt__(self, other):
+        return self.date < other.date
+    
+    def time_from_h(self, hours):
+        return time(hour= int(hours), minute= int(hours * 60 % 60))
+
+#########################################
+
 # Generate the content for the PDF file
+# TODO: Refactor
+"""
 date_day = 1
 table_row = 1
 work_hours_left = args.time
@@ -144,6 +163,20 @@ while (work_hours_left > 0) and (date_day < 28): # February has 28 days and is t
         work_hours_left -= h
         table_row += 1
     date_day += 1
+"""
+
+table_row = 1
+month = ex.Month(args.year, args.month, args.time, args.job)
+days = month.days
+for day in sorted(days):
+    form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
+    form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
+    form_data["hhmmRow"+str(table_row)] = day.start_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_2"] = day.end_time.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_3"] = day.pause.strftime("%H:%M")
+    form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
+    table_row += 1
+
 
 #########################################
 
