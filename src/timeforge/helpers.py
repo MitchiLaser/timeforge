@@ -68,7 +68,7 @@ class Month_Dataset:
 
         def suggest_day_of_month():
             while True:
-                day = random.randint(1,28)  # random day from the 1st to the 28st of a month (February is the shortest month)
+                day = random.randint(1,28)  # random day from the 1st to the 28th of a month (February is the shortest month)
                 d = date(self.year, self.month, day)
                 if d.weekday() <= 4 and not d in self.feiertage:
                     return d
