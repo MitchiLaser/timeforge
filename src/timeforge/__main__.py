@@ -81,6 +81,7 @@ if True:
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
+    import feiertage
     from . import helpers
 
 #########################################
@@ -104,8 +105,8 @@ form_data = {
 
 #########################################
 
-# a call to the Feiertage-Website to fetch the list of national holidays in the German state "Baden-Württemberg"
-feiertage_list = helpers.get_feiertage()
+# list of national holidays in the German state "Baden-Württemberg"
+feiertage_list = feiertage.Holidays("BW").get_holidays_list()
 
 #########################################
 

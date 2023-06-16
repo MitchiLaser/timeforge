@@ -8,27 +8,6 @@ import sys
 import typing
 from datetime import date, datetime, time
 
-#########################################
-
-
-def get_feiertage() -> typing.List[date]:
-    """
-    Define a function to perform an API cal to the German Feiertage API
-    :return: List of dates from the datetime package representing each a public holiday
-    """
-    try:
-        r: requests.Response = requests.get(r"https://feiertage-api.de/api/?nur_land=BW&nur_daten=1")
-    except Exception as e:
-        print(f"Exception when calling Feiertage API -> get_feiertage: {e}\n")
-        sys.exit(os.EX_UNAVAILABLE)
-    # Get json object from the response
-    feiertage: dict = r.json()
-
-    feiertage_datum = [datetime.strptime(i, '%Y-%m-%d').date() for i in list(feiertage.values())]
-
-    return feiertage_datum
-
-#########################################
 
 # store all the table data in an internal data structure
 
