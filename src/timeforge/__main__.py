@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 
-import argparse, argcomplete
-from datetime import date, timedelta, datetime, time
+import argparse
+import argcomplete
+from datetime import date, timedelta, datetime
+
+MILOG_FORM_URL = r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf"
 
 parser = argparse.ArgumentParser(
     prog='TimeForge',
-    description = 'Create fake but realistic looking working time documentation for your student job at KIT',
-    epilog='For further information take a look at the Repository for this program: https://github.com/MitchiLaser/timeforge')
+    description='Create fake but realistic looking working time documentation for your student job at KIT',
+    epilog='For further information take a look at the Repository for this program: '
+           'https://github.com/MitchiLaser/timeforge')
 
 parser.add_argument('-n', '--name', type=str, required=True,
-                   help='Name of the working person')
+                    help='Name of the working person')
 
 parser.add_argument('-m', '--month', type=int, default= datetime.now().month, metavar="[1-12]", choices=range(1,13),
                     help='The month in which the job was done as number, default value will be taken from the system clock')
@@ -72,7 +76,8 @@ if args.verbose:
 
 # prevent autopep8 from moving these imports to the front
 if True:
-    import sys, os
+    import sys
+    import os
     from pypdf import PdfReader, PdfWriter
     import tempfile
     import requests
@@ -135,9 +140,9 @@ if args.verbose:
 
 with tempfile.TemporaryFile() as temp:
 
-    # download online form and store it in a tempfile
+    # download online form and store it in a temp file
     try:
-        r:str = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
+        r: requests.Response = requests.get(MILOG_FORM_URL, allow_redirects=True)
     except Exception as e:
         print(f"Exception when downloading PSE-Hiwi Formular -> {e}\n")
         sys.exit(os.EX_UNAVAILABLE)
@@ -145,13 +150,13 @@ with tempfile.TemporaryFile() as temp:
     temp.write(r.content)
     temp.seek(0)    # move cursor back to the beginning of the file
 
-    pdf_reader = PdfReader( temp ) 
+    pdf_reader = PdfReader(temp)
     pdf_writer = PdfWriter()
 
     fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
     for field in fields:                    # fill out all the fields in the form
         if field in form_data:
-            pdf_writer.update_page_form_field_values(pdf_reader.pages[0],{field: form_data[field]}) 
+            pdf_writer.update_page_form_field_values(pdf_reader.pages[0], {field: form_data[field]})
 
     pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
 
