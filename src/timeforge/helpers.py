@@ -64,11 +64,23 @@ class Month_Dataset:
     def add_work(self, job, date, start_time, end_time, pause, work_hours):
         self.days.append(Day(job, date, start_time, end_time, pause, work_hours))
 
+
+    def year_is_leap_year(year) -> bool:
+        if ((year%4 == 0 and year % 100 != 0) or year%400==0):
+            return True
+        return False
+    
+    def days_of_month(self,month:int,year:int) -> int:
+        if month == 2 and self.year_is_leap_year(year):
+            return 29
+        number_of_days_in_month = [31,28,31,30,31,30,31,31,30,31,30,31]
+        return number_of_days_in_month[month-1]
+
     def generate_content(self, job):
 
         def suggest_day_of_month():
             while True:
-                day = random.randint(1,28)  # random day from the 1st to the 28th of a month (February is the shortest month)
+                day = random.randint(1,self.days_of_month(self.month,self.year))  # random day from the 1st to the last day of the month
                 d = date(self.year, self.month, day)
                 if d.weekday() <= 4 and not d in self.feiertage:
                     return d
