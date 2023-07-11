@@ -159,8 +159,6 @@ with tempfile.TemporaryFile() as temp:
         if field in form_data:
             pdf_writer.update_page_form_field_values(pdf_writer.pages[0], {field: form_data[field]})
 
-    pdf_writer.add_page(pdf_reader.pages[0])    # put form content and page in a pdf-writer object
-
 #########################################
 
 with open(args.output, 'wb') as output_file:    # write file
