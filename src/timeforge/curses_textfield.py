@@ -2,6 +2,7 @@
 # -*- encoding: utf8 -*-
 
 import curses
+import string
 
 class textfield:
     """
@@ -64,8 +65,37 @@ class textfield:
 
         self.window.refresh()
 
-    def input(self, in : str) -> NoneType | str:
-        raise NotImplementedError
+    def _add(self, insert : str) -> None:
+        # Add a string
+        self.content = self.content[0:self.cursor_position] + insert + self.content[self.cursor_position:]
+        self.cursor_position += len(insert)
+
+    def _delete(self) -> None:
+        # delete the character before the cursor
+        if self.cursor_position > 0:
+            self.content = self.content[0:self.cursor_position - 1] + self.content[self.cursor_position:]
+            self.cursor_position -= 1
+
+    def input(self, in_char : str) -> None | str:
+        if type(in_char) == str and not (in_char in ["\n", "\t"]):
+            # add printable characters except newline and tab
+            # TODO: catch Control Characters, e.g. <C-w>, <C-t>, <C-V>
+            # for this the curses raw mode needs to be enabled
+            # TODO: Error, when trying to input Emojis the cursor position is wrong
+            # \_ Check this later, this is a low priority bug because no sane person would use emojis
+            self._add(in_char)
+        elif type(in_char) == int:
+            #TODO: everything except backspace
+            match in_char:
+                case curses.KEY_DC | curses.KEY_BACKSPACE:
+                    # Backspace Key
+                    self._delete()
+                 # TODO: Continue case 
+        else:
+            return in_char
+
+        self.draw()
+        return None
 
 
 if __name__ == "__main__":
@@ -78,6 +108,7 @@ if __name__ == "__main__":
 
         form_input = textfield(win, COLORS, "Test-String")
 
-        _ = stdscr.getch()
+        for i in range(10):
+            form_input.input(stdscr.get_wch())
 
     curses.wrapper(main)
