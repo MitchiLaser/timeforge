@@ -21,12 +21,15 @@ class textfield:
         This is the color pair specifying he foreground and the background color for the window
     init_str : str, optional
         The text field can be filled with a default string in the beginning. The cursor position will always be set after the last character of the string
+    limited: bool, optional
+        If this parameter is set to True then the text field has a fixed length. When the string is as long as the text field then no more text fits in there.
     """
 
-    def __init__(self, window : curses.window, colors, init_str = ""):
+    def __init__(self, window : curses.window, colors, init_str = "", limited : bool = False):
         self.window = window
         self.content = init_str
         self.cursor_position = len(self.content)
+        self.limited = limited
         height, self.window_length = window.getmaxyx()
         if not int(height) == 1:
             raise Exception("Error while initialising text field: Height of window is not 1")
@@ -79,7 +82,7 @@ class textfield:
 
         self.window.refresh()
 
-    def _add(self, insert : str) -> None:
+    def add(self, insert : str) -> None:
         """
         Add a character to the string at the current cursor position
 
@@ -92,7 +95,9 @@ class textfield:
         self.content = self.content[0:self.cursor_position] + insert + self.content[self.cursor_position:]
         self.cursor_position += len(insert)
 
-    def _delete(self) -> None:
+        self.draw()
+
+    def delete(self) -> None:
         """
         This will delete the character before the cursor, as long as the cursor is not at position 0 in the string
         """
@@ -100,6 +105,8 @@ class textfield:
         if self.cursor_position > 0:
             self.content = self.content[0:self.cursor_position - 1] + self.content[self.cursor_position:]
             self.cursor_position -= 1
+
+        self.draw()
 
     def input(self, in_char : str | int) -> None | str:
         """
@@ -121,15 +128,30 @@ class textfield:
 
         if type(in_char) == str and not (in_char in ["\n", "\t"]):
             # add printable characters except newline and tab
-            self._add(in_char)
+            self.add(in_char)
+
+            #TODO: This is experimental and should not be here in the future
+            ### This is an extension to the class to create a text field which only takes a fixed
+            #   length of input characters and sends the signal to the next field if each character is filled
+            # if the text field is completely full: send information
+            if self.limited and ( len(self.content) >= self.window_length):
+                self.cursor_position = 0   # move the cursor position to the beginning so the whole string is visible without the appended space for the cursor
+                return curses.KEY_RIGHT # send signal that text field is full
+                # from here on the surrounding code should move the cursor to another position (otherwise it would look ugly)
+
 
         elif type(in_char) == int:
             # Here are all the non printable characters which the text
             # field has to handle
             match in_char:
                 case curses.KEY_DC | curses.KEY_BACKSPACE:
+
+                    # if the text field has a limited length and there is nothing inside the text field: send an information
+                    if self.limited and len(self.content) == 0:
+                        return in_char
+
                     # Backspace Key
-                    self._delete()
+                    self.delete()
 
                 case curses.KEY_LEFT:
                     # move cursor to left
@@ -148,26 +170,38 @@ class textfield:
                         return in_char
 
         else:
+            # no operation was done
             return in_char
 
-        self.draw()
+        # the key was processed without any further action needed.
         return None
 
+# TODO: remove
+keys = []
 
 if __name__ == "__main__":
     def main(stdscr : curses.window):
-        win = curses.newwin(1,20, 5, 5)
+        win = curses.newwin(1,10, 5, 5)
         stdscr.refresh()
 
         curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_YELLOW)
         COLORS = curses.color_pair(1)
 
-        form_input = textfield(win, COLORS, "Test")
+        #form_input = textfield(win, COLORS, "Test")
+        form_input = textfield(win, COLORS, "Test", True) # TODO: Experimental testing, the limited size should move to another place
 
         while True:
             key = form_input.input(stdscr.get_wch())
+
+            # TODO: remove
+            global keys
+            keys.append([key])
+
             if key == "\n":
                 break;
 
 
 curses.wrapper(main)
+
+# TODO: remove
+print(keys)
