@@ -3,7 +3,10 @@
 
 ## TODO-List for this file:
 #   - BUG: The cursor position is not visible when running the application in Windows OS
-#   - Implement a text-field with a fixed size that switches to the next one when it is full
+
+## TODO-List for features
+#   - handle mouse click inputs
+#   - handle terminal resize
 
 import curses
 import string
@@ -21,15 +24,12 @@ class textfield:
         This is the color pair specifying he foreground and the background color for the window
     init_str : str, optional
         The text field can be filled with a default string in the beginning. The cursor position will always be set after the last character of the string
-    limited: bool, optional
-        If this parameter is set to True then the text field has a fixed length. When the string is as long as the text field then no more text fits in there.
     """
 
-    def __init__(self, window : curses.window, colors, init_str = "", limited : bool = False):
+    def __init__(self, window : curses.window, colors, init_str = ""):
         self.window = window
         self.content = init_str
         self.cursor_position = len(self.content)
-        self.limited = limited
         height, self.window_length = window.getmaxyx()
         if not int(height) == 1:
             raise Exception("Error while initialising text field: Height of window is not 1")
@@ -95,7 +95,11 @@ class textfield:
         self.content = self.content[0:self.cursor_position] + insert + self.content[self.cursor_position:]
         self.cursor_position += len(insert)
 
+        # update view
         self.draw()
+
+        # return a None object because this keystroke was handled and there are no more operations needed
+        return None
 
     def delete(self) -> None:
         """
@@ -105,8 +109,62 @@ class textfield:
         if self.cursor_position > 0:
             self.content = self.content[0:self.cursor_position - 1] + self.content[self.cursor_position:]
             self.cursor_position -= 1
+        else:
+            return curses.KEY_BACKSPACE
 
+        # update view
         self.draw()
+
+        # return a None object because this keystroke was handled and there are no more operations needed
+        return None
+
+    def move_cursor_right(self) -> None | int:
+        """
+        Move the cursor one position to the right (if possible).
+        If the cursor is at the end of the string: leave it at the same position and return curses.KEY_RIGHT 
+
+        Returns
+        -------
+        return : None | int
+            if the cursor was moved one position to the right: return an None (there is no more key to handle).
+            When the cursor is at the end of the string and there is no possibility to move it one position to the right: return curses.KEY_RIGHT as an indicator for the keystroke which still needs to be processed
+        """
+
+        # move cursor to right
+        if self.cursor_position < len(self.content):
+            self.cursor_position += 1
+            self.draw()
+            return None
+        else:
+            # if the boundary is reached: send an information
+            return curses.KEY_RIGHT
+
+    def cursor_to_end(self):
+        """
+        Move the cursor to the end of the string
+        """
+        self.cursor_position = len(self.content)
+
+    def move_cursor_left(self) -> None | int:
+        """
+        Move the cursor one position to the left (if possible).
+        If the cursor is at the beginning of the string: leave it at the same position and return curses.KEY_LEFT 
+
+        Returns
+        -------
+        return : None | int
+            if the cursor was moved one position to the left: return an None (there is no more key to handle).
+            When the cursor is at the beginning of the string and there is no possibility to move it one position to the left: return curses.KEY_LEFT as an indicator for the keystroke which still needs to be processed
+        """
+
+        # move cursor to left
+        if self.cursor_position > 0:
+            self.cursor_position -= 1
+            self.draw()
+            return None
+        else:
+            # if the boundary is reached: send an information
+            return curses.KEY_LEFT
 
     def input(self, in_char : str | int) -> None | str:
         """
@@ -128,17 +186,7 @@ class textfield:
 
         if type(in_char) == str and not (in_char in ["\n", "\t"]):
             # add printable characters except newline and tab
-            self.add(in_char)
-
-            #TODO: This is experimental and should not be here in the future
-            ### This is an extension to the class to create a text field which only takes a fixed
-            #   length of input characters and sends the signal to the next field if each character is filled
-            # if the text field is completely full: send information
-            if self.limited and ( len(self.content) >= self.window_length):
-                self.cursor_position = 0   # move the cursor position to the beginning so the whole string is visible without the appended space for the cursor
-                return curses.KEY_RIGHT # send signal that text field is full
-                # from here on the surrounding code should move the cursor to another position (otherwise it would look ugly)
-
+            return self.add(in_char)
 
         elif type(in_char) == int:
             # Here are all the non printable characters which the text
@@ -146,62 +194,157 @@ class textfield:
             match in_char:
                 case curses.KEY_DC | curses.KEY_BACKSPACE:
 
+                    """
                     # if the text field has a limited length and there is nothing inside the text field: send an information
                     if self.limited and len(self.content) == 0:
                         return in_char
+                    """
 
                     # Backspace Key
-                    self.delete()
+                    return self.delete()
 
                 case curses.KEY_LEFT:
                     # move cursor to left
-                    if self.cursor_position > 0:
-                        self.cursor_position -= 1
-                    else:
-                        # if the boundary is reached: send an information
-                        return in_char
+                    return self.move_cursor_left()
 
                 case curses.KEY_RIGHT:
                     # move cursor to right
-                    if self.cursor_position < len(self.content):
-                        self.cursor_position += 1
-                    else:
-                        # if the boundary is reached: send an information
-                        return in_char
+                    return self.move_cursor_right()
 
+        # no operation was done and the function has still returned nothing
+        return in_char
+
+class textfield_fixed(textfield):
+    """
+    The same as `textfield` but the input length is set to an upper limit
+    """
+
+    # call the same constructor as for the `textfield` class
+    def __init__(self, window : curses.window, colors, init_str = ""):
+        super().__init__(window, colors, init_str)
+
+    def draw(self) -> None:
+        """
+        This function draws the text field with its content and the cursor.
+        It is mostly used to draw the initial state and redraw it after every update
+        """
+        self.window.clear()
+
+        self.window.insstr(0, 0, self.content)
+        if (self.cursor_position < self.window_length):
+            self.window.move(0, self.cursor_position)
+
+        self.window.refresh()
+
+    def add(self, insert : str) -> None:
+        """
+        Add a character to the string at the current cursor position
+
+        Parameters
+        ----------
+        insert : string
+            This string will be added at the current cursor position and the cursor will move the needed amount of characters to the right side
+        """
+        # Add a string 
+        self.content = self.content[0:self.cursor_position] + insert + self.content[self.cursor_position:]
+        self.cursor_position += len(insert)
+
+        # update view
+        self.draw()
+
+        if len(self.content) >= self.window_length:
+            # return a movement one place to the right as a signal that the input field is full and a switch to the next form object should be done
+            return curses.KEY_RIGHT
         else:
-            # no operation was done
-            return in_char
+            # keystroke was handled and there are no further operations needed
+            return None
 
-        # the key was processed without any further action needed.
+    def delete(self) -> None:
+        """
+        This will delete the character before the cursor, as long as the cursor is not at position 0 in the string
+        """
+        # delete the character before the cursor
+        if self.cursor_position > 0:
+            self.content = self.content[0:self.cursor_position - 1] + self.content[self.cursor_position:]
+            self.cursor_position -= 1
+        else:
+            return curses.KEY_BACKSPACE
+
+        # update view
+        self.draw()
+
+        # return a None object because this keystroke was handled and there are no more operations needed
         return None
 
-# TODO: remove
+
+
 keys = []
 
 if __name__ == "__main__":
+    """
+    This function only exists to test the development of the module and provide an example. It creates objects of the containing classes and provides a simple demo and how to use them
+    """
     def main(stdscr : curses.window):
-        win = curses.newwin(1,10, 5, 5)
-        stdscr.refresh()
 
+        # choose a color pair for demonstration purpose
         curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_YELLOW)
         COLORS = curses.color_pair(1)
+        
+        # draw some explaining text to this example
+        stdscr.addstr(4, 5, "This is an example text field with infinite length")
+        stdscr.addstr(6, 5, "Here are two example text fields with finite length")
+        stdscr.addstr(8, 5, "Again an example text field with infinite length")
 
-        #form_input = textfield(win, COLORS, "Test")
-        form_input = textfield(win, COLORS, "Test", True) # TODO: Experimental testing, the limited size should move to another place
+        forms = [
+            textfield(curses.newwin(1,10, 5, 5), COLORS, "Test"),
+            textfield_fixed(curses.newwin(1,5, 7, 5), COLORS, ""),
+            textfield_fixed(curses.newwin(1,5, 7, 15), COLORS, ""),
+            textfield(curses.newwin(1,10, 9, 5), COLORS, "Test")
+        ]
 
+        stdscr.refresh()
+
+        # draw all the text-fields so they are visible
+        for i in forms:
+            i.draw()
+
+        current_field = forms[0]    # first text field should be set as starting point
+        current_field.draw()    # set cursor position to the right object
+
+        # this loop handles all the input events
         while True:
-            key = form_input.input(stdscr.get_wch())
+            key = current_field.input(stdscr.get_wch())
 
-            # TODO: remove
             global keys
-            keys.append([key])
+            keys.append(key)
 
-            if key == "\n":
-                break;
+            if key in [curses.KEY_RIGHT, "\n", "\t"]:
+                # move one place to the right / downstairs
+                position = forms.index(current_field)
+                if position == (len(forms) - 1):
+                    # move our of the last field
+                    break
+                else:
+                    current_field = forms[position + 1]
 
+            if key in [curses.KEY_LEFT, curses.KEY_DC, curses.KEY_BACKSPACE]:
+                # move one place to the left / upstairs
+                position = forms.index(current_field)
+                if position > 0:
+                    current_field = forms[position - 1]
 
-curses.wrapper(main)
+                if key in [curses.KEY_DC, curses.KEY_BACKSPACE]:
+                    # if the key was a backspace key: delete cursor
+                    current_field.cursor_to_end()
+                    current_field.delete()
+                if key == curses.KEY_LEFT:
+                    # move cursor one position to the left
+                    current_field.move_cursor_left()
 
-# TODO: remove
-print(keys)
+            current_field.draw()
+
+    curses.wrapper(main)
+
+    print("The following keystrokes were reported to the surrounding code:")
+    from pprint import pprint
+    pprint(keys)
