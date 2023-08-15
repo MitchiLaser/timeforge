@@ -80,8 +80,10 @@ class tui:
         # Escape-Sequenzen aktivieren
         self.stdscr.keypad(1)
 
-        # No blinking cursor
+        ## No blinking cursor
         #curses.curs_set(False)
+        # reduce cursor to small line if possible
+        curses.curs_set(1)
 
         # clear screen
         self.stdscr.clear()
@@ -199,6 +201,8 @@ class tui:
             self.form.move(i,0) 
             self.textfields.append([])
 
+            fixed_length = structure[i][0]
+
             # now print each string or create a text field with the length of each integer
             for j in structure[i]:
                 if type(j) == str:
@@ -206,21 +210,28 @@ class tui:
                 elif type(j) == int:
                     y, x = self.form.getyx()
                     newwin = curses.newwin(1, j, start_window_y + y, start_window_x + x)
-                    self.textfields[i].append(
-                        text_input.textfield(
-                            newwin,
-                            self._form_color,
-                            init_str=""#,
-                            #limited=structure[i][0]
-                            #TODO: Suport limited textfields
+
+                    if fixed_length:
+                        self.textfields[i].append(
+                            text_input.textfield_fixed(
+                                newwin,
+                                self._form_color,
+                                init_str=""#,
+                            )
                         )
-                    )
+                    else: 
+                        self.textfields[i].append(
+                            text_input.textfield(
+                                newwin,
+                                self._form_color,
+                                init_str=""#,
+                            )
+                        )
                     # add empty spaces to move the following strings to the right spot
                     self.form.addstr(" "*j)
         
         
         now = datetime.now()
-        #TODO: Fix problems with printing of the content -> implement fix length input fields and fix initialisation process of form generation
         self.textfields[0][0].add(f"{now.month:02d}")
         self.textfields[0][1].add(f"{now.year:04d}")
 
@@ -231,10 +242,12 @@ class tui:
             for j in i:
                 j.draw()
 
+        # TODO: Draw "save" and "Quit" buttons
+
         # put the cursor into the name input field 
         self.textfields[1][0].draw()
 
-        #TODO: From here on the initialisation should be done except for the "Save" and the "Exit" buttons and all the TODO comments on the way there.
+        # TODO: From here on the initialisation should be done except for the "Save" and the "Exit" buttons and all the TODO comments on the way there.
         # continue with the input handling and all the interconnects between the input fields
 
 if __name__ == "__main__":

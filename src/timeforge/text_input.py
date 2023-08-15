@@ -277,6 +277,68 @@ class textfield_fixed(textfield):
         return None
 
 
+class button:
+    """
+    Create a button with curses
+
+    Attributes
+    ----------
+    window : curses.window
+        The Window object in which the button will be drawn
+    text : str
+        The text inside the button
+    colors :
+        The colors used for this button (inverted when active)
+
+    """
+    def __init__(self, window : curses.window, colors, text : str):
+        self.window = window
+        self.text = text
+
+        self.colors = colors
+        self.window.bkgd(self.colors)
+        
+        self.deactivate()
+        self.draw()
+
+    def draw(self):
+        """
+        Draw the button
+        """
+        self.window.insstr(0, 0, "< " + self.text + " >")
+        self.window.refresh()
+
+    def deactivate(self):
+        """
+        deactivate the button
+        """
+        curses.curs_set(1)
+        self.window.attron(curses.A_REVERSE)
+        self.draw()
+
+    def activate(self):
+        """
+        activate the button
+        """
+        curses.curs_set(0)
+        self.window.attroff(curses.A_REVERSE)
+        self.draw()
+
+    def input(self, in_char):
+        """
+        Dummy input function, because a button processes no input
+
+        Parameters
+        ----------
+        in_char : input character
+
+        Returns
+        -------
+        in_char : same as argument 
+        """
+        return in_char
+
+
 
 keys = []
 
@@ -299,12 +361,13 @@ if __name__ == "__main__":
             textfield(curses.newwin(1,10, 5, 5), COLORS, "Test"),
             textfield_fixed(curses.newwin(1,5, 7, 5), COLORS, ""),
             textfield_fixed(curses.newwin(1,5, 7, 15), COLORS, ""),
-            textfield(curses.newwin(1,10, 9, 5), COLORS, "Test")
+            textfield(curses.newwin(1,10, 9, 5), COLORS, "Test"),
+            button(curses.newwin(1,8, 12, 5), COLORS, "Exit")
         ]
 
         stdscr.refresh()
 
-        # draw all the text-fields so they are visible
+        # draw all the text-fields and the button so they are visible
         for i in forms:
             i.draw()
 
@@ -315,17 +378,22 @@ if __name__ == "__main__":
         while True:
             key = current_field.input(stdscr.get_wch())
 
+            if isinstance(current_field, button):
+                current_field.deactivate()
+                current_field.draw()
+
             global keys
             keys.append(key)
 
             if key in [curses.KEY_RIGHT, "\n", "\t"]:
-                # move one place to the right / downstairs
-                position = forms.index(current_field)
-                if position == (len(forms) - 1):
-                    # move our of the last field
+
+                if key in ["\n", "\t"] and current_field == forms[-1]:
                     break
-                else:
-                    current_field = forms[position + 1]
+
+                # move one place to the right / downstairs if possible
+                position = forms.index(current_field)
+                if position != (len(forms) - 1):
+                   current_field = forms[position + 1]
 
             if key in [curses.KEY_LEFT, curses.KEY_DC, curses.KEY_BACKSPACE]:
                 # move one place to the left / upstairs
@@ -341,6 +409,8 @@ if __name__ == "__main__":
                     # move cursor one position to the left
                     current_field.move_cursor_left()
 
+            if isinstance(current_field, button):
+                current_field.activate()
             current_field.draw()
 
     curses.wrapper(main)
