@@ -330,13 +330,52 @@ class button:
 
         Parameters
         ----------
-        in_char : input character
+        in_char : str, int
+            the input character
 
         Returns
         -------
-        in_char : same as argument 
+        in_char : str, int
+            same as the parameter
         """
         return in_char
+
+
+class quit_button(button):
+    """
+    Create a button which terminates the program if ENTER is pressed
+
+    Attributes
+    ----------
+    window : curses.window
+        The Window object in which the button will be drawn
+    text : str
+        The text inside the button
+    colors :
+        The colors used for this button (inverted when active)
+
+    """
+    def __init__(self, window : curses.window, colors, text : str):
+        super().__init__(window, colors, text)
+
+    def input(self, in_char):
+        """
+
+        Parameters
+        ----------
+        in_char : str, int
+            The input character
+
+        Returns
+        -------
+        in_char : str, int
+            same as the parameter but only if it is not ENTER
+
+        """
+        if in_char in ["\n"]:
+            exit(0) # the program should be aborted
+        else:
+            return in_char
 
 
 
@@ -362,7 +401,8 @@ if __name__ == "__main__":
             textfield_fixed(curses.newwin(1,5, 7, 5), COLORS, ""),
             textfield_fixed(curses.newwin(1,5, 7, 15), COLORS, ""),
             textfield(curses.newwin(1,10, 9, 5), COLORS, "Test"),
-            button(curses.newwin(1,8, 12, 5), COLORS, "Exit")
+            quit_button(curses.newwin(1, 8, 12, 5), COLORS, "Quit"),
+            button(curses.newwin(1,8, 12, 15), COLORS, "Exit")
         ]
 
         stdscr.refresh()
@@ -405,7 +445,7 @@ if __name__ == "__main__":
                     # if the key was a backspace key: delete cursor
                     current_field.cursor_to_end()
                     current_field.delete()
-                if key == curses.KEY_LEFT:
+                if key == curses.KEY_LEFT and not isinstance(current_field, button):
                     # move cursor one position to the left
                     current_field.move_cursor_left()
 
