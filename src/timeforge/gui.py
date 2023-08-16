@@ -180,17 +180,18 @@ class tui:
         if (start_window_x < 1) or (start_window_y < 1) or (h - start_window_y - window_height < 1) or (w - start_window_x - window_length < 1):
             raise Exception("Error: Your terminal window is not big enough to display the whole applications user interface")
 
-        # now the window object can be initialised with all the important parameters being set and the border can be drawn
+        # draw a border around the form window
         self.border = curses.newwin(window_height + 2, window_length + 2, start_window_y - 1, start_window_x - 1)
-        self.border.box()
         self.border.bkgd(self._base_color)
+        self.border.box()
+        # add a title to the border
         title = "TimeForge"
         start_title_x = (window_length + 2)//2 - len(title)//2
-        self.border.addstr(0, start_title_x - 1, "┤")
-        self.border.addstr(title)
-        self.border.addstr("├")
+        self.border.addstr(0, start_title_x - 1, "┤" + str(title) + "├")
+        # draw the currently generated border
         self.border.refresh()
 
+        # now start drawing the form window
         self.form = curses.newwin(window_height, window_length, start_window_y, start_window_x)
         self.form.bkgd(self._base_color)
         # draw the form based on the content of the `structure` variable
@@ -201,33 +202,34 @@ class tui:
             self.form.move(i,0) 
             self.textfields.append([])
 
+            # the boolean which is being used to determine if the text fields should have a fixed length or not
             fixed_length = structure[i][0]
 
             # now print each string or create a text field with the length of each integer
             for j in structure[i]:
+
+                # print strings
                 if type(j) == str:
                     self.form.addstr(j)
+                # convert integers to text fields
                 elif type(j) == int:
                     y, x = self.form.getyx()
                     newwin = curses.newwin(1, j, start_window_y + y, start_window_x + x)
 
                     if fixed_length:
-                        self.textfields[i].append(
-                            text_input.textfield_fixed(
-                                newwin,
-                                self._form_color,
-                                init_str=""#,
-                            )
+                        field_generator = lambda : text_input.textfield_fixed
+                    else:
+                        field_generator = lambda : text_input.textfield
+
+                    self.textfields[i].append(
+                        field_generator()(
+                            newwin,
+                            self._form_color,
+                            init_str=""
                         )
-                    else: 
-                        self.textfields[i].append(
-                            text_input.textfield(
-                                newwin,
-                                self._form_color,
-                                init_str=""#,
-                            )
-                        )
-                    # add empty spaces to move the following strings to the right spot
+
+                    )
+                    # add empty spaces to move the cursor to the end of the form window in case a string is following in the list
                     self.form.addstr(" "*j)
         
         
@@ -243,6 +245,8 @@ class tui:
                 j.draw()
 
         # TODO: Draw "save" and "Quit" buttons
+        ##structure.append([
+        ##    text_input.button(
 
         # put the cursor into the name input field 
         self.textfields[1][0].draw()
