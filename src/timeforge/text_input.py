@@ -340,6 +340,17 @@ class button:
         """
         return in_char
 
+    def cursor_to_end(self):
+        """
+        Dummy function, because otherwise it might break the code
+        """
+        pass
+    def delete(self):
+        """
+        Dummy function, because otherwise it might break the code
+        """
+        pass
+
 
 class quit_button(button):
     """

@@ -10,7 +10,6 @@ a long List of TODO Notes
 Roadmap
 -------
 
-- Make the right interconnections between the textfields
 - verify user input
 - Make a save dialog to enter the file location and name
 - Call main application and create file
@@ -35,21 +34,26 @@ class tui:
         # initialise curses 
         self.stdscr = curses.initscr()
         try:
-            self._init_curses()
-            self._update_size()
-            self._init_default_form()
+            self.init_curses()
+            self.update_size()
+            self.init_default_form()
+            self.event_loop_form()
             #TODO: Add further function calls here
         except curses.error as e:
-            self._reverse()
+            self.reverse()
             print("Cursed Error: %s"%e)
         except Exception as e:
-            self._reverse()
+            self.reverse()
+            #import os, sys
+            #exc_type, exc_obj, exc_tb = sys.exc_info()
+            #fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            #print(exc_type, fname, exc_tb.tb_lineno)
             print("Error: %s"%e)
 
     def __del__(self):
-        self._reverse()
+        self.reverse()
 
-    def _reverse(self):
+    def reverse(self):
         """
         End the curses session and restore the terminal to its original state
         """
@@ -58,7 +62,7 @@ class tui:
         curses.curs_set(True)               # restore blinking cursor
         curses.endwin()                     # restore terminal to original state
 
-    def _init_curses(self):
+    def init_curses(self):
         """
         Initialise the Curses Session
         """
@@ -120,14 +124,14 @@ class tui:
         # display initialised screen with background color
         self.stdscr.refresh()
 
-    def _update_size(self):
+    def update_size(self):
         """
         Get the size of stdscr which is takeing the full space of the terminal
         """
         h, w = self.stdscr.getmaxyx()
         self.h, self.w = h, w
 
-    def _init_default_form(self):
+    def init_default_form(self):
         """
         intiialise the forumlar with all the description texts and everything else
         """
@@ -198,7 +202,6 @@ class tui:
         for i in range(len(structure)):
             # put cursor on current line
             self.form.move(i,0) 
-            self.textfields.append([])
 
             # the boolean which is being used to determine if the text fields should have a fixed length or not
             fixed_length = structure[i][0]
@@ -215,7 +218,7 @@ class tui:
                     y, x = self.form.getyx()
                     # add (fixed length) input fields
                     field_generator = text_input.textfield_fixed if fixed_length else text_input.textfield
-                    self.textfields[i].append(
+                    self.textfields.append(
                         field_generator(
                             curses.newwin(1, j, start_window_y + y, start_window_x + x),
                             self._form_color,
@@ -227,38 +230,74 @@ class tui:
     
         # add the current month and year to the text fields in the beginning
         now = datetime.now()
-        self.textfields[0][0].add(f"{now.month:02d}")
-        self.textfields[0][1].add(f"{now.year:04d}")
+        self.textfields[0].add(f"{now.month:02d}")
+        self.textfields[1].add(f"{now.year:04d}")
 
         # Draw "save" and "Quit" buttons
-        self.textfields.append(
-            [
-                text_input.button(
-                    curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + 1),
-                    self._form_color,
-                    "Save"
-                ),
-                text_input.quit_button(
-                   curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + window_length - 8 - 1),
-                    self._form_color,
-                    "Exit"
-                )
-            ]
+        self.button_save = text_input.button(
+            curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + 1),
+            self._form_color,
+            "Save"
         )
+        self.button_quit = text_input.quit_button(
+           curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + window_length - 8 - 1),
+            self._form_color,
+            "Exit"
+        )
+        self.textfields.extend([self.button_save, self.button_quit])
 
         # update the drawing of the main field and after that all the text fields
         # inside (otherwise the text fields will be overdrawn)
         self.form.refresh()
         for i in self.textfields:
-            for j in i:
-                j.draw()
+            i.draw()
 
         # put the cursor into the name input field 
-        self.textfields[1][0].draw()
+        self.current_field = self.textfields[2]
+        self.current_field.draw()
 
-        # TODO: continue with the input handling and all the interconnects between the input fields
+    def event_loop_form(self):
+        """
+        This function handles the event loop and the input for the main form
+        """
+
+        while True:
+            # wait for key press and get the key
+            key = self.current_field.input(self.stdscr.get_wch())
+
+            # if the focus is currently on a button: deactivate it and activate it later because the focus might change
+            if isinstance(self.current_field, text_input.button):
+                self.current_field.deactivate()
+
+            # get the index of the currently active input object in the list of forms
+            position = self.textfields.index(self.current_field)
+
+            if key in [curses.KEY_RIGHT, "\n", "\t"]:
+
+                if key in ["\n", "\t"] and self.current_field == self.button_save:
+                    # break free from this loop and continue writing the output to a file
+                    break
+
+                # move one place to the right / downstairs if possible
+                if position != (len(self.textfields) - 1):
+                   self.current_field = self.textfields[position + 1]
+
+            if key in [curses.KEY_LEFT, curses.KEY_DC, curses.KEY_BACKSPACE]:
+                # move one place to the left / upstairs
+                if position > 0:
+                    self.current_field = self.textfields[position - 1]
+
+                if key in [curses.KEY_DC, curses.KEY_BACKSPACE]:
+                    # if the key was a backspace key: delete cursor
+                    self.current_field.cursor_to_end()
+                    self.current_field.delete()
+                if key == curses.KEY_LEFT and not isinstance(self.current_field, text_input.button):
+                    # move cursor one position to the left
+                    self.current_field.move_cursor_left()
+
+            if isinstance(self.current_field, text_input.button):
+                self.current_field.activate()
+            self.current_field.draw()
 
 if __name__ == "__main__":
     tui = tui()
-    _ = tui.stdscr.get_wch()
-    del tui
