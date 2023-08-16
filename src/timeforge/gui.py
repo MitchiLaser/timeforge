@@ -10,9 +10,7 @@ a long List of TODO Notes
 Roadmap
 -------
 
-- Draw the tui with all the textfields
 - Make the right interconnections between the textfields
-- Place a "Save" and an "Exit" button
 - verify user input
 - Make a save dialog to enter the file location and name
 - Call main application and create file
@@ -143,7 +141,7 @@ class tui:
             [True, "Personel number: ", 7], # row for the personal number (7 digits, fixed)
             [False, "Organisation (OE): ", 20], # row for the organisation
             [True, "Working hours: ", 2,".", 1, "hours"], # the monthly working hours
-            [True, "hourly wage: ", 2, ".", 2, "€"] # the hourly wage in euros and cents
+            [True, "hourly wage: ", 2, ".", 2, "€"], # the hourly wage in euros and cents
         ]
 
         # determine the width of the longest line in the form field
@@ -211,31 +209,42 @@ class tui:
                 # print strings
                 if type(j) == str:
                     self.form.addstr(j)
+
                 # convert integers to text fields
                 elif type(j) == int:
                     y, x = self.form.getyx()
-                    newwin = curses.newwin(1, j, start_window_y + y, start_window_x + x)
-
-                    if fixed_length:
-                        field_generator = lambda : text_input.textfield_fixed
-                    else:
-                        field_generator = lambda : text_input.textfield
-
+                    # add (fixed length) input fields
+                    field_generator = text_input.textfield_fixed if fixed_length else text_input.textfield
                     self.textfields[i].append(
-                        field_generator()(
-                            newwin,
+                        field_generator(
+                            curses.newwin(1, j, start_window_y + y, start_window_x + x),
                             self._form_color,
                             init_str=""
                         )
-
                     )
                     # add empty spaces to move the cursor to the end of the form window in case a string is following in the list
                     self.form.addstr(" "*j)
-        
-        
+    
+        # add the current month and year to the text fields in the beginning
         now = datetime.now()
         self.textfields[0][0].add(f"{now.month:02d}")
         self.textfields[0][1].add(f"{now.year:04d}")
+
+        # Draw "save" and "Quit" buttons
+        self.textfields.append(
+            [
+                text_input.button(
+                    curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + 1),
+                    self._form_color,
+                    "Save"
+                ),
+                text_input.quit_button(
+                   curses.newwin(1, 8, start_window_y + window_height - 1, start_window_x + window_length - 8 - 1),
+                    self._form_color,
+                    "Exit"
+                )
+            ]
+        )
 
         # update the drawing of the main field and after that all the text fields
         # inside (otherwise the text fields will be overdrawn)
@@ -244,15 +253,10 @@ class tui:
             for j in i:
                 j.draw()
 
-        # TODO: Draw "save" and "Quit" buttons
-        ##structure.append([
-        ##    text_input.button(
-
         # put the cursor into the name input field 
         self.textfields[1][0].draw()
 
-        # TODO: From here on the initialisation should be done except for the "Save" and the "Exit" buttons and all the TODO comments on the way there.
-        # continue with the input handling and all the interconnects between the input fields
+        # TODO: continue with the input handling and all the interconnects between the input fields
 
 if __name__ == "__main__":
     tui = tui()
