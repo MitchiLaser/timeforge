@@ -1,5 +1,8 @@
 SHELL := /bin/bash
 
+.SILENT: clean
+.IGNORE: clean
+
 build:	clean
 	python -m build
 	twine check --strict dist/*
