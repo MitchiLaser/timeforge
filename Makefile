@@ -2,18 +2,17 @@ SHELL := /bin/bash
 
 build:	clean
 	python -m build
+	twine check --strict dist/*
 
 clean:
 	rm -rf build/
 	rm -rf dist/
 	rm -rf src/TimeForge.egg-info/
-	rm -rf venv/
+	rm -rf venv/test
+	rm -rf `find . -type d -name __pycache__`
 
-upload: build
-	twine upload dist/*
-
-venv:	build
+devenv:	
 	python -m venv venv/
-	. venv/bin/activate; pip install dist/TimeForge*.tar.gz
+	. venv/bin/activate; pip install -e .
 	. venv/bin/activate; pip install ptpython
 
