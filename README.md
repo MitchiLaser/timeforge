@@ -19,7 +19,15 @@ $ pip install timeforge
 This program has currently only a command line interface. Use
 
 ``` bash
-$ python -m timeforge --help
+$ timeforge --help
 ```
 
 to get an overview of the functionality. The PDF document with the form will be automatically downloaded from the PSE homepage.
+
+Furthermore this tool has a rudimentary but working UI. Only Linux and MAC are supported, maybe it also works on Windows. Call
+
+``` bash
+$ timeforge-tui
+```
+
+to start the user interface
