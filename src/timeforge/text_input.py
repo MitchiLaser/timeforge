@@ -276,6 +276,27 @@ class textfield_fixed(textfield):
         # return a None object because this keystroke was handled and there are no more operations needed
         return None
 
+    def move_cursor_right(self) -> None | int:
+        """
+        Move the cursor one position to the right (if possible).
+        If the cursor is at the end of the string: leave it at the same position and return curses.KEY_RIGHT 
+
+        Returns
+        -------
+        return : None | int
+            if the cursor was moved one position to the right: return an None (there is no more key to handle).
+            When the cursor is at the end of the string and there is no possibility to move it one position to the right: return curses.KEY_RIGHT as an indicator for the keystroke which still needs to be processed
+        """
+
+        # move cursor to right
+        if self.cursor_position < len(self.content) - 1:
+            self.cursor_position += 1
+            self.draw()
+            return None
+        else:
+            # if the boundary is reached: send an information
+            return curses.KEY_RIGHT
+
 
 class button:
     """
