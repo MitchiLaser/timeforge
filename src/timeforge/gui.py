@@ -18,7 +18,7 @@ Roadmap
 
 import curses
 import string
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import text_input # TODO: Make this a relative import later when the development here is done
 
 class tui:
@@ -38,6 +38,7 @@ class tui:
             self.update_size()
             self.init_default_form()
             self.event_loop_form()
+            self.validate_content()
             #TODO: Add further function calls here
         except curses.error as e:
             self.reverse()
@@ -298,6 +299,49 @@ class tui:
             if isinstance(self.current_field, text_input.button):
                 self.current_field.activate()
             self.current_field.draw()
+
+    def validate_content(self):
+
+        form_data = {
+            'Urlaub anteilig' : 0,
+            'Übertrag vom Vormonat' : 0, 
+            'Übertrag in den Folgemonat' : 0, 
+            'undefined' : '', #Datum, Unterschrift Dienstvorgesetzte/r
+        }
+
+        form_data['abc'] = (month := int(self.textfields[0].content))
+        if month < 1 or month > 12:
+            raise ValueError(f"Month has to be between 1 and 12, {month} is not in this range")
+
+        form_data['abdd'] = (year := int(self.textfields[1].content))
+        if year < 0 :
+            raise ValueError(f"Year has to be between 1 and 12, {year} is not in this range")
+
+        form_data['GF'] = str(self.textfields[2].content)
+        form_data['Personalnummer'] = str(self.textfields[3].content)
+        form_data['OE'] = str(self.textfields[4].content)
+
+        working_hours = float( str(self.textfields[5].content) + "." + str(self.textfields[6].content) )
+        if working_hours == ".":
+            raise ValueError("Missing value for Working hours")
+        if working_hours < 1:
+            raise ValueError(f"Amount of working hours has to be greater than zero, {working_hours} is not in this range")
+        form_data['Std'] = working_hours
+        form_data['Summe'] = working_hours
+        form_data['monatliche SollArbeitszeit'] = working_hours
+
+        salary = float( str(self.textfields[7].content) + "." + str(self.textfields[8].content) )
+        if salary == ".":
+            raise ValueError("Missing value for hourly wage hours")
+        if salary < 1:
+            raise ValueError(f"Amount of hourly wage has to be greater than zero, {salary} is not in this range")
+        form_data['Stundensatz'] = "%.2f"%(salary)+'€'
+
+        form_data['Ich bestätige die Richtigkeit der Angaben'] = (date(year=year,month=month,day=1) + timedelta(days=31)).replace(day=1)
+
+        self.write_to_form = form_data
+        # TODO: generate the missing part of the form by calling the helper function
+
 
 if __name__ == "__main__":
     tui = tui()
