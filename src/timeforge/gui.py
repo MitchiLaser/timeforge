@@ -10,7 +10,6 @@ a long List of TODO Notes
 Roadmap
 -------
 
-- verify user input
 - Make a save dialog to enter the file location and name
 - Call main application and create file
 
@@ -19,7 +18,14 @@ Roadmap
 import curses
 import string
 from datetime import datetime, date, timedelta
-import text_input # TODO: Make this a relative import later when the development here is done
+import feiertage
+import tempfile
+import requests
+import sys
+import os
+from pypdf import PdfReader, PdfWriter
+from . import text_input
+from . import helpers
 
 class tui:
     """
@@ -39,6 +45,9 @@ class tui:
             self.init_default_form()
             self.event_loop_form()
             self.validate_content()
+            self.create_pdf_content()
+            # TODO: Create the dialog for the storage location
+            self.write_file()
             #TODO: Add further function calls here
         except curses.error as e:
             self.reverse()
@@ -312,10 +321,12 @@ class tui:
         form_data['abc'] = (month := int(self.textfields[0].content))
         if month < 1 or month > 12:
             raise ValueError(f"Month has to be between 1 and 12, {month} is not in this range")
+        self.month = month
 
         form_data['abdd'] = (year := int(self.textfields[1].content))
         if year < 0 :
             raise ValueError(f"Year has to be between 1 and 12, {year} is not in this range")
+        self.year = year
 
         form_data['GF'] = str(self.textfields[2].content)
         form_data['Personalnummer'] = str(self.textfields[3].content)
@@ -324,8 +335,10 @@ class tui:
         working_hours = float( str(self.textfields[5].content) + "." + str(self.textfields[6].content) )
         if working_hours == ".":
             raise ValueError("Missing value for Working hours")
-        if working_hours < 1:
+        if working_hours < 0:
             raise ValueError(f"Amount of working hours has to be greater than zero, {working_hours} is not in this range")
+        self.time = working_hours
+
         form_data['Std'] = working_hours
         form_data['Summe'] = working_hours
         form_data['monatliche SollArbeitszeit'] = working_hours
@@ -333,15 +346,59 @@ class tui:
         salary = float( str(self.textfields[7].content) + "." + str(self.textfields[8].content) )
         if salary == ".":
             raise ValueError("Missing value for hourly wage hours")
-        if salary < 1:
+        if salary < 0:
             raise ValueError(f"Amount of hourly wage has to be greater than zero, {salary} is not in this range")
         form_data['Stundensatz'] = "%.2f"%(salary)+'€'
 
         form_data['Ich bestätige die Richtigkeit der Angaben'] = (date(year=year,month=month,day=1) + timedelta(days=31)).replace(day=1)
 
-        self.write_to_form = form_data
-        # TODO: generate the missing part of the form by calling the helper function
+        self.form_data = form_data
 
+    def create_pdf_content(self):
+        # list of national holidays in the German state "Baden-Württemberg"
+        feiertage_list = feiertage.Holidays("BW").get_holidays_list()
+
+        # Generate the content for the PDF file
+        table_row = 1
+        month = helpers.Month_Dataset(self.year, self.month, self.time, "", feiertage_list)
+        days = month.days
+        for day in sorted(days):
+            self.form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
+            self.form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
+            self.form_data["hhmmRow"+str(table_row)] = day.start_time.strftime("%H:%M")
+            self.form_data["hhmmRow"+str(table_row)+"_2"] = day.end_time.strftime("%H:%M")
+            self.form_data["hhmmRow"+str(table_row)+"_3"] = day.pause.strftime("%H:%M")
+            self.form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
+            table_row += 1
+
+    def write_file(self):
+
+        with tempfile.TemporaryFile() as temp:
+            # download online form and store it in a temp file
+            try:
+                r: requests.Response = requests.get(r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf", allow_redirects=True)
+            except Exception as e:
+                raise Exception(f"Exception when downloading PSE-Hiwi Formular -> {e}\n")
+
+            temp.write(r.content)
+            temp.seek(0)    # move cursor back to the beginning of the file
+
+            pdf_reader = PdfReader(temp)
+            pdf_writer = PdfWriter(clone_from=pdf_reader)   # to copy everything else pdf_writer= PdfWriter();pdf_writer.append(pdf_reader)
+
+            fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
+            for field in fields:                    # fill out all the fields in the form
+                if field in self.form_data:
+                    pdf_writer.update_page_form_field_values(pdf_writer.pages[0], {field: self.form_data[field]})
+
+        with open(str(os.path.expanduser('~')) + "/out.pdf", 'wb') as output_file:    # write file
+            pdf_writer.write(output_file)
+
+
+def main():
+    ui = tui()
+    del ui
+    print("file saved as \"out.pdf\" in your home directory")
 
 if __name__ == "__main__":
-    tui = tui()
+    main()
