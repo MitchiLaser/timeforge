@@ -5,7 +5,7 @@
 a long List of TODO Notes
 -------------------------
 
-- Capture signals p.Ex. SIGINT (CTRL + C) or SIGTERM 
+- Capture signals p.Ex. SIGINT (CTRL + C) or SIGTERM
 
 Roadmap
 -------
@@ -18,8 +18,8 @@ Roadmap
 import curses
 import string
 from datetime import datetime, date, timedelta
-import feiertage
 import tempfile
+import feiertage
 import requests
 import sys
 import os
@@ -37,7 +37,7 @@ class tui:
         initialise the tui and set some session parameters
         """
 
-        # initialise curses 
+        # initialise curses
         self.stdscr = curses.initscr()
         try:
             self.init_curses()
@@ -54,10 +54,10 @@ class tui:
             print("Cursed Error: %s"%e)
         except Exception as e:
             self.reverse()
-            #import os, sys
-            #exc_type, exc_obj, exc_tb = sys.exc_info()
-            #fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            #print(exc_type, fname, exc_tb.tb_lineno)
+            # import os, sys
+            # exc_type, exc_obj, exc_tb = sys.exc_info()
+            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            # print(exc_type, fname, exc_tb.tb_lineno)
             print("Error: %s"%e)
 
     def __del__(self):
@@ -82,7 +82,7 @@ class tui:
         else:
             # this application won't work when the terminal does not support colours
             raise IOError
-        
+
         # kein Anzeigen gedrückter Tasten
         curses.noecho()
 
@@ -106,7 +106,7 @@ class tui:
             # the curses colour definitions take the values from 0 to 7 so the first
             # self defined colour will start at 8 (first parameter)
             curses.init_color(8, 28, 212, 264)
-            # RGB values have to be set to integers from 0 to 1000 (last 3 parameters) so 
+            # RGB values have to be set to integers from 0 to 1000 (last 3 parameters) so
             # this colour definition is equivalent to #073642
             curses.init_pair(1, curses.COLOR_WHITE, 8)
         else:
@@ -119,7 +119,7 @@ class tui:
             # the curses colour definitions take the values from 0 to 7 so the first
             # self defined colour will start at 8 (first parameter)
             curses.init_color(9, 142, 600, 972)
-            # RGB values have to be set to integers from 0 to 1000 (last 3 parameters) so 
+            # RGB values have to be set to integers from 0 to 1000 (last 3 parameters) so
             # this colour definition is equivalent to #073642
             curses.init_pair(2, curses.COLOR_WHITE, 9)
             # colour 8 was defined previously
@@ -211,7 +211,7 @@ class tui:
         self.textfields = []
         for i in range(len(structure)):
             # put cursor on current line
-            self.form.move(i,0) 
+            self.form.move(i,0)
 
             # the boolean which is being used to determine if the text fields should have a fixed length or not
             fixed_length = structure[i][0]
@@ -237,7 +237,7 @@ class tui:
                     )
                     # add empty spaces to move the cursor to the end of the form window in case a string is following in the list
                     self.form.addstr(" "*j)
-    
+
         # add the current month and year to the text fields in the beginning
         now = datetime.now()
         self.textfields[0].add(f"{now.month:02d}")
@@ -262,7 +262,7 @@ class tui:
         for i in self.textfields:
             i.draw()
 
-        # put the cursor into the name input field 
+        # put the cursor into the name input field
         self.current_field = self.textfields[2]
         self.current_field.draw()
 
@@ -313,8 +313,8 @@ class tui:
 
         form_data = {
             'Urlaub anteilig' : 0,
-            'Übertrag vom Vormonat' : 0, 
-            'Übertrag in den Folgemonat' : 0, 
+            'Übertrag vom Vormonat' : 0,
+            'Übertrag in den Folgemonat' : 0,
             'undefined' : '', #Datum, Unterschrift Dienstvorgesetzte/r
         }
 
