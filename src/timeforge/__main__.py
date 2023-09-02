@@ -5,7 +5,6 @@ import argparse
 import argcomplete
 from datetime import date, timedelta, datetime
 
-MILOG_FORM_URL = r"https://www.pse.kit.edu/downloads/Formulare/KIT%20Arbeitszeitdokumentation%20MiLoG.pdf"
 
 def main():
     """
@@ -20,19 +19,19 @@ def main():
     parser.add_argument('-n', '--name', type=str, required=True,
                         help='Name of the working person')
 
-    parser.add_argument('-m', '--month', type=int, default= datetime.now().month, metavar="[1-12]", choices=range(1,13),
+    parser.add_argument('-m', '--month', type=int, default=datetime.now().month, metavar="[1-12]", choices=range(1, 13),
                         help='The month in which the job was done as number, default value will be taken from the system clock')
 
-    parser.add_argument('-y', '--year', type=int, default= datetime.now().year,
+    parser.add_argument('-y', '--year', type=int, default=datetime.now().year,
                         help='the year in which the work was done, default value will be taken from the system clock')
 
     parser.add_argument('-t', '--time', type=float, required=True,
-                        help='the amount of working time in a month') 
+                        help='the amount of working time in a month')
 
     parser.add_argument('-p', '--personell', type=int, required=True,
                         help='personell number (please do not put it in quotation marks')
 
-    parser.add_argument('-s','--salary', type=float, required=True,
+    parser.add_argument('-s', '--salary', type=float, required=True,
                         help="the salary (per hour) in euros")
 
     parser.add_argument('-O', '--organisation', type=str, required=True,
@@ -80,37 +79,38 @@ def main():
 
     # prevent autopep8 from moving these imports to the front
     if True:
-        import sys
+        import feiertage
         import os
         from pypdf import PdfReader, PdfWriter
-        import tempfile
         import requests
-        import feiertage
+        import sys
+        import tempfile
         from . import helpers
+        from . import config
 
     #########################################
 
     form_data = {
-        'Std' : args.time,
-        'Summe' : args.time,
-        'monatliche SollArbeitszeit' : args.time,
-        'Urlaub anteilig' : 0,
-        'Übertrag vom Vormonat' : 0, 
-        'Übertrag in den Folgemonat' : 0, 
-        'Stundensatz' : "%.2f"%(args.salary)+'€', 
-        'Personalnummer' : args.personell, 
-        'OE' : args.organisation,
-        'GF' : args.name, #Name, Vorname
-        'abc' : args.month,
-        'abdd' : args.year,
-        'undefined' : '', #Datum, Unterschrift Dienstvorgesetzte/r
-        'Ich bestätige die Richtigkeit der Angaben' : (date(year=args.year,month=args.month,day=1) + timedelta(days=31)).replace(day=1)
+        'Std': args.time,
+        'Summe': args.time,
+        'monatliche SollArbeitszeit': args.time,
+        'Urlaub anteilig': 0,
+        'Übertrag vom Vormonat': 0,
+        'Übertrag in den Folgemonat': 0,
+        'Stundensatz': "%.2f" % (args.salary) + '€',
+        'Personalnummer': args.personell,
+        'OE': args.organisation,
+        'GF': args.name,  # Name, Vorname
+        'abc': args.month,
+        'abdd': args.year,
+        'undefined': '',  # Datum, Unterschrift Dienstvorgesetzte/r
+        'Ich bestätige die Richtigkeit der Angaben': (date(year=args.year, month=args.month, day=1) + timedelta(days=31)).replace(day=1)
     }
 
     #########################################
 
     # list of national holidays in the German state "Baden-Württemberg"
-    feiertage_list = feiertage.Holidays("BW").get_holidays_list()
+    feiertage_list = feiertage.Holidays(config.FEDERAL_STATE).get_holidays_list()
 
     #########################################
 
@@ -134,7 +134,6 @@ def main():
         form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
         table_row += 1
 
-
     #########################################
 
     if args.verbose:
@@ -147,7 +146,7 @@ def main():
 
         # download online form and store it in a temp file
         try:
-            r: requests.Response = requests.get(MILOG_FORM_URL, allow_redirects=True)
+            r: requests.Response = requests.get(config.MILOG_FORM_URL, allow_redirects=True)
         except Exception as e:
             print(f"Exception when downloading PSE-Hiwi Formular -> {e}\n")
             sys.exit(os.EX_UNAVAILABLE)
@@ -167,6 +166,7 @@ def main():
 
     with open(args.output, 'wb') as output_file:    # write file
         pdf_writer.write(output_file)
+
 
 if __name__ == "__main__":
     main()
