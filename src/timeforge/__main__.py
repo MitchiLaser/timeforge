@@ -87,6 +87,7 @@ def main():
         import tempfile
         from . import helpers
         from . import config
+        from . import core
 
     #########################################
 
@@ -142,30 +143,10 @@ def main():
 
     #########################################
 
-    with tempfile.TemporaryFile() as temp:
-
-        # download online form and store it in a temp file
-        try:
-            r: requests.Response = requests.get(config.MILOG_FORM_URL, allow_redirects=True)
-        except Exception as e:
-            print(f"Exception when downloading PSE-Hiwi Formular -> {e}\n")
-            sys.exit(os.EX_UNAVAILABLE)
-
-        temp.write(r.content)
-        temp.seek(0)    # move cursor back to the beginning of the file
-
-        pdf_reader = PdfReader(temp)
-        pdf_writer = PdfWriter(clone_from=pdf_reader)   # to copy everything else pdf_writer= PdfWriter();pdf_writer.append(pdf_reader)
-
-        fields = pdf_reader.get_form_text_fields()  # get the field names from the form in the pdf
+    with core.ProvideOutputFile(args.output) as (WriteInPDF, fields):
         for field in fields:                    # fill out all the fields in the form
             if field in form_data:
-                pdf_writer.update_page_form_field_values(pdf_writer.pages[0], {field: form_data[field]})
-
-    #########################################
-
-    with open(args.output, 'wb') as output_file:    # write file
-        pdf_writer.write(output_file)
+                WriteInPDF.update_page_form_field_values(WriteInPDF.pages[0], {field: form_data[field]})
 
 
 if __name__ == "__main__":
