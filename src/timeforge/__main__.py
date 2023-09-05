@@ -37,7 +37,7 @@ def main():
     parser.add_argument('-O', '--organisation', type=str, required=True,
                         help='Name of the KIT organisational unit')
 
-    parser.add_argument('-g', '--low-income', action='store_true',
+    parser.add_argument('-g', action='store_true',
                         help='the Großforschungsbereich (GF) field in the form, default: False')
 
     parser.add_argument('-u', action='store_true',
