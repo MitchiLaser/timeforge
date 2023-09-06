@@ -38,10 +38,10 @@ def main():
                         help='Name of the KIT organisational unit')
 
     parser.add_argument('-g', action='store_true',
-                        help='the Großforschungsbereich (GF) field in the form, default: False')
+                        help='the Großforschungsbereich (GF) field in the form, currently not usable')
 
     parser.add_argument('-u', action='store_true',
-                        help='the Universitätsbereich (UB) field in the form, default: True')
+                        help='the Universitätsbereich (UB) field in the form, currently not usable')
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='more detailed information printing for debugging purpose')
@@ -68,7 +68,7 @@ def main():
         tab.add_row(["Personell number", args.personell])
         tab.add_row(["Salary", str(args.salary) + '€'])
         tab.add_row(["Organisation unit", args.organisation])
-        tab.add_row(["GF", args.low_income])
+        tab.add_row(["GF", args.g])
         tab.add_row(["UB", args.u])
         tab.add_row(["Verbose", args.verbose])
         tab.add_row(["Output-File", args.output])
@@ -117,7 +117,7 @@ def main():
 
     if args.verbose:
         from pprint import pprint
-        print("\nResponse form the Feiertage API:")
+        print("\nCalculated Holidays:")
         pprint(feiertage_list)
 
     #########################################
@@ -127,12 +127,12 @@ def main():
     month = helpers.Month_Dataset(args.year, args.month, args.time, args.job, feiertage_list)
     days = month.days
     for day in sorted(days):
-        form_data['Tätigkeit Stichwort ProjektRow'+str(table_row)] = day.job
-        form_data["ttmmjjRow"+str(table_row)] = day.date.strftime("%d.%m.%y")
-        form_data["hhmmRow"+str(table_row)] = day.start_time.strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_2"] = day.end_time.strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_3"] = day.pause.strftime("%H:%M")
-        form_data["hhmmRow"+str(table_row)+"_4"] = day.work_hours.strftime("%H:%M")
+        form_data['Tätigkeit Stichwort ProjektRow' + str(table_row)] = day.job
+        form_data["ttmmjjRow" + str(table_row)] = day.date.strftime("%d.%m.%y")
+        form_data["hhmmRow" + str(table_row)] = day.start_time.strftime("%H:%M")
+        form_data["hhmmRow" + str(table_row) + "_2"] = day.end_time.strftime("%H:%M")
+        form_data["hhmmRow" + str(table_row) + "_3"] = day.pause.strftime("%H:%M")
+        form_data["hhmmRow" + str(table_row) + "_4"] = day.work_hours.strftime("%H:%M")
         table_row += 1
 
     #########################################
