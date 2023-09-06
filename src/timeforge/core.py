@@ -4,6 +4,7 @@
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 import feiertage
+import itertools
 import os
 from pypdf import PdfReader, PdfWriter
 import requests
@@ -11,6 +12,35 @@ import sys
 import tempfile
 from typing import Any
 from . import config
+
+
+def PrintDictAsTable(dataset: dict, title_keys: str, title_values: str):
+    """
+    This function prints a dictionary as a table.
+    This is really useful for debugging purposes and will be called multiple times when the verbose flag is set.
+
+    Parameters
+    ----------
+    dataset : dict
+        The dictionary which should be printed
+    title_keys : str
+        A title for the dictionary keys column
+    title_values : str
+        A title for the dictionary values column
+
+    """
+    # get the max length of a string in the key and in the value section
+    max_key_len, max_value_len = len(title_keys), len(title_values)
+    for (i, j) in zip([*dataset.keys()], [*dataset.values()]):
+        max_key_len = max(len(str(i)), max_key_len)
+        max_value_len = max(len(str(j)), max_value_len)
+
+    print("┌─" + "─" * max_key_len + "─┬─" + "─" * max_value_len + "─┐")
+    print("│ " + title_keys + " " * (max_key_len - len(title_keys)) + " │ " + title_values + " " * (max_value_len - len(title_values)) + " │")
+    print("├─" + "─" * max_key_len + "─┼─" + "─" * max_value_len + "─┤")
+    for (i, j) in zip([*dataset.keys()], [*dataset.values()]):
+        print("│ " + str(i) + " " * (max_key_len - len(str(i))) + " │ " + str(j) + " " * (max_value_len - len(str(j))) + " │")
+    print("└─" + "─" * max_key_len + "─┴─" + "─" * max_value_len + "─┘")
 
 
 class APP_Data:
