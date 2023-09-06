@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "TimeForge"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
 	"argcomplete >= 3.0.5",
-	"prettytable >= 3.6.0",
 	"feiertage-de >= 0.1.0",
 	"requests >= 2.31.0",
 	"pypdf >= 3.10.0",

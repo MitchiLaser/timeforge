@@ -43,6 +43,31 @@ def PrintDictAsTable(dataset: dict, title_keys: str, title_values: str):
     print("└─" + "─" * max_key_len + "─┴─" + "─" * max_value_len + "─┘")
 
 
+def PrintListAsTable(dataset: list, title: str):
+    """
+    This function prints a list as a table.
+    This is really useful for debugging purpose and will be called multiple times when the verbose flag is set.
+
+    Parameters
+    ----------
+    dataset : list
+        The list which should be printed as a table
+    title : str
+        The title of the list
+
+    """
+    max_len = len(title)
+    for i in dataset:
+        max_len = max(len(str(i)), max_len)
+
+    print("┌─" + "─" * max_len + "─┐")
+    print("│ " + title + " " * (max_len - len(title)) + " │")
+    print("├─" + "─" * max_len + "─┤")
+    for i in dataset:
+        print("│ " + str(i) + " " * (max_len - len(str(i))) + " │")
+    print("└─" + "─" * max_len + "─┘")
+
+
 class APP_Data:
 
     def __init__(self):

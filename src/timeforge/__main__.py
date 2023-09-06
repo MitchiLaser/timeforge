@@ -57,26 +57,6 @@ def main():
 
     #########################################
 
-    if args.verbose:
-        from prettytable import PrettyTable
-        tab = PrettyTable()
-        tab.field_names = ["Parameter", "Value"]
-        tab.add_row(["Name", args.name])
-        tab.add_row(["Month", args.month])
-        tab.add_row(["Year", args.year])
-        tab.add_row(["Working Time", args.time])
-        tab.add_row(["Personell number", args.personell])
-        tab.add_row(["Salary", str(args.salary) + '€'])
-        tab.add_row(["Organisation unit", args.organisation])
-        tab.add_row(["GF", args.g])
-        tab.add_row(["UB", args.u])
-        tab.add_row(["Verbose", args.verbose])
-        tab.add_row(["Output-File", args.output])
-        tab.add_row(["Job-task", args.job])
-        print(tab)
-
-    #########################################
-
     # prevent autopep8 from moving these imports to the front
     if True:
         import feiertage
@@ -88,6 +68,28 @@ def main():
         from . import helpers
         from . import config
         from . import core
+
+    #########################################
+
+    if args.verbose:
+        core.PrintDictAsTable(
+            {
+                "Name": args.month,
+                "Month": args.month,
+                "Year": args.year,
+                "Working Time": args.time,
+                "Personell number": args.personell,
+                "Salary": str(args.salary) + '€',
+                "Organisation unit": args.organisation,
+                "GF": args.g,
+                "UB": args.u,
+                "Verbose": args.verbose,
+                "Output-File": args.output,
+                "Job-task": args.job,
+            },
+            "Command Line Arguments",
+            "Values"
+        )
 
     #########################################
 
@@ -116,9 +118,7 @@ def main():
     #########################################
 
     if args.verbose:
-        from pprint import pprint
-        print("\nCalculated Holidays:")
-        pprint(feiertage_list)
+        core.PrintListAsTable(feiertage_list, "Calculated Holidays")
 
     #########################################
 
@@ -138,8 +138,7 @@ def main():
     #########################################
 
     if args.verbose:
-        print("\nForm Data:")
-        pprint(form_data)
+        core.PrintDictAsTable(form_data, "PDF Form field", "Value")
 
     #########################################
 
