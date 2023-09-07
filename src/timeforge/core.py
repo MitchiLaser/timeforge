@@ -142,7 +142,7 @@ class APP_Data:
             "jobs": check_jobs,  # jobs must be checked separately because they have to be of the type list with minimal length of 1
         }
 
-        # there are some keys which have no validation, no default value and will not be validated. These are listed here:
+        # there are some keys which have no validation, no default value and will not be present in the pdf file. These are listed here:
         self.misc_keys = {
             "output",   # output file
         }

@@ -21,6 +21,7 @@ import feiertage
 import os
 from pypdf import PdfReader, PdfWriter
 import requests
+import sys
 import tempfile
 from . import text_input
 from . import helpers
@@ -45,16 +46,18 @@ class tui:
             self.update_size()
             self.init_default_form()
             self.event_loop_form()
-            self.validate_content()
+            self.collect_input()
             self.create_pdf_content()
             # TODO: Create the dialog for the storage location
             # TODO: Add further function calls here
         except curses.error as e:
             self.reverse()
             print("Cursed Error: %s" % e)
+            raise e
         except Exception as e:
             self.reverse()
             print("Error: %s" % e)
+            raise e
 
     def __del__(self):
         self.reverse()
@@ -305,50 +308,20 @@ class tui:
                 self.current_field.activate()
             self.current_field.draw()
 
-    def validate_content(self):
-
-        form_data = {
-            'Urlaub anteilig': 0,
-            'Übertrag vom Vormonat': 0,
-            'Übertrag in den Folgemonat': 0,
-            'undefined': '',  # Datum, Unterschrift Dienstvorgesetzte/r
-        }
-
-        form_data['abc'] = (month := int(self.textfields[0].content))
-        if month < 1 or month > 12:
-            raise ValueError(f"Month has to be between 1 and 12, {month} is not in this range")
-        self.month = month
-
-        form_data['abdd'] = (year := int(self.textfields[1].content))
-        if year < 0:
-            raise ValueError(f"Year has to be between 1 and 12, {year} is not in this range")
-        self.year = year
-
-        form_data['GF'] = str(self.textfields[2].content)
-        form_data['Personalnummer'] = str(self.textfields[3].content)
-        form_data['OE'] = str(self.textfields[4].content)
-
-        working_hours = float(str(self.textfields[5].content) + "." + str(self.textfields[6].content))
-        if working_hours == ".":
-            raise ValueError("Missing value for Working hours")
-        if working_hours < 0:
-            raise ValueError(f"Amount of working hours has to be greater than zero, {working_hours} is not in this range")
-        self.time = working_hours
-
-        form_data['Std'] = working_hours
-        form_data['Summe'] = working_hours
-        form_data['monatliche SollArbeitszeit'] = working_hours
-
-        salary = float(str(self.textfields[7].content) + "." + str(self.textfields[8].content))
-        if salary == ".":
-            raise ValueError("Missing value for hourly wage hours")
-        if salary < 0:
-            raise ValueError(f"Amount of hourly wage has to be greater than zero, {salary} is not in this range")
-        form_data['Stundensatz'] = "%.2f" % (salary) + '€'
-
-        form_data['Ich bestätige die Richtigkeit der Angaben'] = (date(year=year, month=month, day=1) + timedelta(days=31)).replace(day=1)
-
-        self.form_data = form_data
+    def collect_input(self):
+        self.user_input = core.APP_Data()
+        self.user_input.set("month", self.textfields[0].content)
+        self.user_input.set("year", self.textfields[1].content)
+        self.user_input.set("name", self.textfields[2].content)
+        self.user_input.set("personell", self.textfields[3].content)
+        self.user_input.set("organisation", self.textfields[4].content)
+        self.user_input.set("time", f"{self.textfields[5].content}.{self.textfields[6].content}")
+        self.user_input.set("salary", f"{self.textfields[7].content}.{self.textfields[8].content}")
+        self.user_input.set("jobs", [""])
+        self.user_input.set("output", "~/out.pdf")
+        if len(missing := self.user_input.missing_keys()) != 0:
+            raise RuntimeError(f"Missing keys in the internal dataset, cannot generate pdf: {missing}")
+        self.form_data = self.user_input.pdf_content()
 
     def create_pdf_content(self):
         # list of national holidays in the German state "Baden-Württemberg"
@@ -356,7 +329,7 @@ class tui:
 
         # Generate the content for the PDF file
         table_row = 1
-        month = helpers.Month_Dataset(self.year, self.month, self.time, "", feiertage_list)
+        month = helpers.Month_Dataset(self.user_input.get("year"), self.user_input.get("month"), self.user_input.get("time"), "", feiertage_list)
         days = month.days
         for day in sorted(days):
             self.form_data['Tätigkeit Stichwort ProjektRow' + str(table_row)] = day.job
@@ -374,9 +347,12 @@ class tui:
 
 
 def main():
-    ui = tui()
-    del ui
-    print("file saved as \"out.pdf\" in your home directory")
+    try:
+        ui = tui()
+        del ui
+        print("file saved as \"out.pdf\" in your home directory")
+    finally:
+        pass
 
 
 if __name__ == "__main__":
