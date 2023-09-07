@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 
-import argparse
-import argcomplete
+import configargparse
 from datetime import date, timedelta, datetime
 import feiertage
 import os
@@ -19,49 +18,25 @@ def main():
     """
     This whole script was wrapped into a main function. This behaviour is mandatory to create an installable executable for pip
     """
-    parser = argparse.ArgumentParser(
+    # TODO: better argument parsing including the support for a config file or a buffer
+    parser = configargparse.ArgParser(
         prog='TimeForge',
         description='Create fake but realistic looking working time documentation for your student job at KIT',
         epilog='For further information take a look at the Repository for this program: '
                'https://github.com/MitchiLaser/timeforge')
-
-    parser.add_argument('-n', '--name', type=str, required=True,
-                        help='Name of the working person')
-
-    parser.add_argument('-m', '--month', type=int, default=datetime.now().month, metavar="[1-12]", choices=range(1, 13),
-                        help='The month in which the job was done as number, default value will be taken from the system clock')
-
-    parser.add_argument('-y', '--year', type=int, default=datetime.now().year,
-                        help='the year in which the work was done, default value will be taken from the system clock')
-
-    parser.add_argument('-t', '--time', type=float, required=True,
-                        help='the amount of working time in a month')
-
-    parser.add_argument('-p', '--personell', type=int, required=True,
-                        help='personell number (please do not put it in quotation marks')
-
-    parser.add_argument('-s', '--salary', type=float, required=True,
-                        help="the salary (per hour) in euros")
-
-    parser.add_argument('-O', '--organisation', type=str, required=True,
-                        help='Name of the KIT organisational unit')
-
-    parser.add_argument('-g', action='store_true',
-                        help='the Großforschungsbereich (GF) field in the form, currently not usable')
-
-    parser.add_argument('-u', action='store_true',
-                        help='the Universitätsbereich (UB) field in the form, currently not usable')
-
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='more detailed information printing for debugging purpose')
-
-    parser.add_argument('-o', '--output', type=str, required=True,
-                        help='Output File where the content will be written to')
-
-    parser.add_argument('-j', '--job', type=str, required=True,
-                        help='description of the job task')
-
-    argcomplete.autocomplete(parser)
+    parser.add('-c', '--config', is_config_file=True, help='Location of the config file')
+    parser.add('-n', '--name', type=str, required=True, help='Name of the working person')
+    parser.add('-m', '--month', type=int, default=datetime.now().month, metavar="[1-12]", choices=range(1, 13), help='The month in which the job was done as number, default value will be taken from the system clock')
+    parser.add('-y', '--year', type=int, default=datetime.now().year, help='the year in which the work was done, default value will be taken from the system clock')
+    parser.add('-t', '--time', type=float, required=True, help='the amount of working time in a month')
+    parser.add('-p', '--personell', type=int, required=True, help='personell number (please do not put it in quotation marks')
+    parser.add('-s', '--salary', type=float, required=True, help="the salary (per hour) in euros")
+    parser.add('-O', '--organisation', type=str, required=True, help='Name of the KIT organisational unit')
+    parser.add('-g', action='store_true', help='the Großforschungsbereich (GF) field in the form, currently not usable')
+    parser.add('-u', action='store_true', help='the Universitätsbereich (UB) field in the form, currently not usable')
+    parser.add('-v', '--verbose', action='store_true', help='more detailed information printing for debugging purpose')
+    parser.add('-o', '--output', type=str, required=True, help='Output File where the content will be written to')
+    parser.add('-j', '--job', type=str, required=True, help='description of the job task')
     args = parser.parse_args()
 
     #########################################
@@ -70,7 +45,7 @@ def main():
         # print command line arguments
         core.PrintDictAsTable(
             {
-                "Name": args.month,
+                "Name": args.name,
                 "Month": args.month,
                 "Year": args.year,
                 "Working Time": args.time,
@@ -116,6 +91,7 @@ def main():
     #########################################
 
     # Generate the content for the PDF file
+    # TODO: this should be outsourced into the core module
     table_row = 1
     month = helpers.Month_Dataset(args.year, args.month, args.time, args.job, feiertage_list)
     days = month.days

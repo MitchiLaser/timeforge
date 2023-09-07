@@ -18,4 +18,5 @@ devenv:
 	python -m venv venv/
 	. venv/bin/activate; pip install -e .
 	. venv/bin/activate; pip install ptpython
+	. venv/bin/activate; pip install pynvim
 
