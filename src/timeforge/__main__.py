@@ -4,6 +4,15 @@
 import argparse
 import argcomplete
 from datetime import date, timedelta, datetime
+import feiertage
+import os
+from pypdf import PdfReader, PdfWriter
+import requests
+import sys
+import tempfile
+from . import helpers
+from . import config
+from . import core
 
 
 def main():
@@ -57,21 +66,8 @@ def main():
 
     #########################################
 
-    # prevent autopep8 from moving these imports to the front
-    if True:
-        import feiertage
-        import os
-        from pypdf import PdfReader, PdfWriter
-        import requests
-        import sys
-        import tempfile
-        from . import helpers
-        from . import config
-        from . import core
-
-    #########################################
-
     if args.verbose:
+        # print command line arguments
         core.PrintDictAsTable(
             {
                 "Name": args.month,
@@ -93,22 +89,19 @@ def main():
 
     #########################################
 
-    form_data = {
-        'Std': args.time,
-        'Summe': args.time,
-        'monatliche SollArbeitszeit': args.time,
-        'Urlaub anteilig': 0,
-        'Übertrag vom Vormonat': 0,
-        'Übertrag in den Folgemonat': 0,
-        'Stundensatz': "%.2f" % (args.salary) + '€',
-        'Personalnummer': args.personell,
-        'OE': args.organisation,
-        'GF': args.name,  # Name, Vorname
-        'abc': args.month,
-        'abdd': args.year,
-        'undefined': '',  # Datum, Unterschrift Dienstvorgesetzte/r
-        'Ich bestätige die Richtigkeit der Angaben': (date(year=args.year, month=args.month, day=1) + timedelta(days=31)).replace(day=1)
-    }
+    user_input = core.APP_Data()
+    user_input.set("month", args.month)
+    user_input.set("year", args.year)
+    user_input.set("name", args.name)
+    user_input.set("personell", args.personell)
+    user_input.set("organisation", args.organisation)
+    user_input.set("time", args.time)
+    user_input.set("salary", str(args.salary))
+    user_input.set("jobs", [args.job])
+    user_input.set("output", args.output)
+    if len(missing := user_input.missing_keys()) != 0:
+        raise RuntimeError(f"Missing keys in the internal dataset, cannot generate pdf: {missing}")
+    form_data = user_input.pdf_content()
 
     #########################################
 
