@@ -254,7 +254,7 @@ class APP_Data:
 @contextmanager
 def ProvideOutputFile(output_file: str):
     # store the online PDF in a temporary file which will automatically be deleted when this contextmanager will be left
-    with tempfile.TemporaryFile() as temp:
+    with tempfile.TemporaryFile(suffix=".pdf") as temp:
 
         # download online form and store it in a temp file
         try:

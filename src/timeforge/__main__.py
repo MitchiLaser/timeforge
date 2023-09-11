@@ -18,7 +18,6 @@ def main():
     """
     This whole script was wrapped into a main function. This behaviour is mandatory to create an installable executable for pip
     """
-    # TODO: better argument parsing including the support for a config file or a buffer
     parser = configargparse.ArgParser(
         prog='TimeForge',
         description='Create fake but realistic looking working time documentation for your student job at KIT',
@@ -38,8 +37,6 @@ def main():
     parser.add('-o', '--output', type=str, required=True, help='Output File where the content will be written to')
     parser.add('-j', '--job', type=str, required=True, help='description of the job task')
     args = parser.parse_args()
-
-    #########################################
 
     if args.verbose:
         # print command line arguments
@@ -83,8 +80,6 @@ def main():
     # list of national holidays in the German state "Baden-Württemberg"
     feiertage_list = feiertage.Holidays(config.FEDERAL_STATE).get_holidays_list()
 
-    #########################################
-
     if args.verbose:
         core.PrintListAsTable(feiertage_list, "Calculated Holidays")
 
@@ -103,8 +98,6 @@ def main():
         form_data["hhmmRow" + str(table_row) + "_3"] = day.pause.strftime("%H:%M")
         form_data["hhmmRow" + str(table_row) + "_4"] = day.work_hours.strftime("%H:%M")
         table_row += 1
-
-    #########################################
 
     if args.verbose:
         core.PrintDictAsTable(form_data, "PDF Form field", "Value")
