@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "TimeForge"
-version = "1.1.0"
+version = "1.2.0"
 authors = [
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
@@ -24,7 +24,7 @@ dependencies = [
 	"argcomplete >= 3.0.5",
 	"feiertage-de >= 0.1.0",
 	"requests >= 2.31.0",
-	"pypdf >= 3.10.0",
+	"pypdf ~= 5.0",
 	"ConfigArgParse >= 1.7",
 ]
 

@@ -239,15 +239,15 @@ class APP_Data:
             if isinstance(pdf_key, list):
                 # if the translation table contains a list: use all keys in the list
                 for j in pdf_key:
-                    pdf_dict[j] = self.dataset[i]
+                    pdf_dict[j] = str(self.dataset[i])
             elif i == "signature":
                 # change to the first day of the next month
-                pdf_dict[pdf_key] = (date(year=self.dataset["year"], month=self.dataset["month"], day=1) + timedelta(days=31)).replace(day=1)
+                pdf_dict[pdf_key] = str((date(year=self.dataset["year"], month=self.dataset["month"], day=1) + timedelta(days=31)).replace(day=1))
             elif i == "salary":
                 # this value should be formatted with two digits after the decimal separater
                 pdf_dict[pdf_key] = "%.2f" % (self.dataset[i]) + " €"
             else:
-                pdf_dict[pdf_key] = self.dataset[i]
+                pdf_dict[pdf_key] = str(self.dataset[i])
         return pdf_dict
 
 
