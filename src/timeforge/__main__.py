@@ -78,7 +78,7 @@ def main():
     #########################################
 
     # list of national holidays in the German state "Baden-Württemberg"
-    feiertage_list = feiertage.Holidays(config.FEDERAL_STATE).get_holidays_list()
+    feiertage_list = feiertage.Holidays(config.FEDERAL_STATE, year=args.year).get_holidays_list()
 
     if args.verbose:
         core.PrintListAsTable(feiertage_list, "Calculated Holidays")
