@@ -66,7 +66,7 @@ class Month_Dataset:
     def add_work(self, job, date, start_time, end_time, pause, work_hours):
         self.days.append(Day(job, date, start_time, end_time, pause, work_hours))
 
-    def year_is_leap_year(year) -> bool:
+    def year_is_leap_year(self, year) -> bool:
         if ((year % 4 == 0 and year % 100 != 0) or year % 400 == 0):
             return True
         return False
